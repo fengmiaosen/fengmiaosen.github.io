@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          基于webpack实现react组件的按需加载 - 冯淼森的博客
+        
+    </title>
+
+    <link rel="canonical" href="http://fengmiaosen.github.io/2017/01/08/webpack-react-lazy-load/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Pygments Highlight CSS -->
+    <link rel="stylesheet" href="/css/highlight.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">冯淼森的博客</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archives/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="http://fengmiaosen.github.io/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('/img/home-bg.jpg')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#react" title="react">react</a>
+                        
+                          <a class="tag" href="/tags/#webpack" title="webpack">webpack</a>
+                        
+                    </div>
+                    <h1>基于webpack实现react组件的按需加载</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by fengmiaosen on
+                        2017-01-08
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p>随着web应用功能越来越复杂，模块打包后体积越来越大，如何实现静态资源的按需加载，最大程度的减小首页加载模块体积和首屏加载时间，成为模块打包工具的必备核心技能。</p>
+<p>webpack作为当下最为流行的模块打包工具，成为了react、vue等众多热门框架的官方推荐打包工具。其提供的Code Splitting（代码分割）特性正是实现模块按需加载的关键方式。</p>
+<a id="more"></a>
+<h1 id="什么是Code-Splitting"><a href="#什么是Code-Splitting" class="headerlink" title="什么是Code Splitting"></a>什么是Code Splitting</h1><p><a href="https://webpack.js.org/guides/code-splitting/" target="_blank" rel="external">官方定义</a>：</p>
+<blockquote>
+<p>Code splitting is one of the most compelling features of webpack. It allows you to split your code into various bundles which you can then load on demand — like when a user navigates to a matching route, or on an event from the user. This allows for smaller bundles, and allows you to control resource load prioritization, which if used correctly, can have a major impact on your application load time </p>
+</blockquote>
+<p>翻译过来大概意思就是：</p>
+<blockquote>
+<p>代码分割功能允许将web应用代码分割为多个独立模块，当用户导航到一个匹配的路由或者派发某些特定事件时，来按需加载这些模块。这样就可以将大型的模块分割为多个小型的模块，实现系统资源加载的最大优化，如果使用得当，能够极大的减少我们的应用首屏加载时间。</p>
+</blockquote>
+<h1 id="Code-splitting-分类"><a href="#Code-splitting-分类" class="headerlink" title="Code splitting 分类"></a>Code splitting 分类</h1><h2 id="一、缓存和并行加载的资源分割"><a href="#一、缓存和并行加载的资源分割" class="headerlink" title="一、缓存和并行加载的资源分割"></a>一、缓存和并行加载的资源分割</h2><p>这种方法是将某些第三方基础框架模块（例如：moment、loadash）或者多个页面的公用模块（js、css）拆分出来独立打包加载，通常这些模块改动频率很低，将其与业务功能模块拆分出来并行加载，一方面可以最大限度的利用浏览器缓存，另一方面也可以大大降低多页面系统的代码冗余度。</p>
+<p>按照资源类型不同又可以分为<code>js公共资源分割</code>和<code>css资源分割</code>两类。</p>
+<h3 id="1、js公共资源分割"><a href="#1、js公共资源分割" class="headerlink" title="1、js公共资源分割"></a>1、js公共资源分割</h3><p>例如：系统应用入口文件<code>index.js</code>中使用日期功能库 <a href="https://www.npmjs.com/package/moment" target="_blank" rel="external">momentjs</a>。</p>
+<p><strong>index.js</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> moment = <span class="built_in">require</span>(<span class="string">'moment'</span>);</div><div class="line"><span class="built_in">console</span>.log(moment().format());</div></pre></td></tr></table></figure>
+<p><strong>webpack.config.js</strong></p>
+<h4 id="定义多个entry入口"><a href="#定义多个entry入口" class="headerlink" title="定义多个entry入口"></a>定义多个entry入口</h4><ul>
+<li><code>main</code>为主入口模块文件</li>
+<li><code>vendor</code>为公共基础库模块，名字可随意设定。称为initial chunk</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> path = <span class="built_in">require</span>(<span class="string">'path'</span>);</div><div class="line"></div><div class="line"><span class="built_in">module</span>.exports = &#123;</div><div class="line">   <span class="attr">entry</span>: &#123;</div><div class="line">       <span class="attr">main</span>: <span class="string">'./index.js'</span>,</div><div class="line">       <span class="attr">vendor</span>: [<span class="string">'moment'</span>]</div><div class="line">   &#125;,</div><div class="line">   <span class="attr">output</span>: &#123;</div><div class="line">       <span class="attr">filename</span>: <span class="string">'[name].js'</span>,</div><div class="line">       <span class="attr">path</span>: path.resolve(__dirname, <span class="string">'dist'</span>)</div><div class="line">   &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>执行webpack打包命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">webpack --progress --hide-modules</div></pre></td></tr></table></figure>
+<p>可以看到最终打包为两个js文件 <code>main.js</code> 、<code>vendor.js</code>，但如果检查者两个文件会发现<code>moment</code>模块代码被重复打包到两个文件中，而这肯定不是我们想要的，这时候就需要 webpack的plugin发挥作用了。</p>
+<p><img src="http://7xt6po.com1.z0.glb.clouddn.com/vendor.jpg" alt="vendo"></p>
+<h4 id="使用CommonsChunkPlugin"><a href="#使用CommonsChunkPlugin" class="headerlink" title="使用CommonsChunkPlugin"></a>使用CommonsChunkPlugin</h4><figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> webpack = <span class="built_in">require</span>(<span class="string">'webpack'</span>);</div><div class="line"><span class="keyword">var</span> path = <span class="built_in">require</span>(<span class="string">'path'</span>);</div><div class="line"></div><div class="line"><span class="built_in">module</span>.exports = &#123;</div><div class="line">   <span class="attr">entry</span>: &#123;</div><div class="line">       <span class="attr">main</span>: <span class="string">'./index.js'</span>,</div><div class="line">       <span class="attr">vendor</span>: [<span class="string">'moment'</span>]</div><div class="line">   &#125;,</div><div class="line">   <span class="attr">output</span>: &#123;</div><div class="line">       <span class="attr">filename</span>: <span class="string">'[chunkhash:8].[name].js'</span>,</div><div class="line">       <span class="attr">path</span>: path.resolve(__dirname, <span class="string">'dist'</span>)</div><div class="line">   &#125;,</div><div class="line">   <span class="attr">plugins</span>: [</div><div class="line">       <span class="keyword">new</span> webpack.optimize.CommonsChunkPlugin(&#123;</div><div class="line">            <span class="comment">// vendor是包括公共的第三方代码，称为initial chunk</span></div><div class="line">           name: <span class="string">'vendor'</span></div><div class="line">       &#125;)</div><div class="line">   ]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>执行webpack打包命令，我们发现<code>moment</code>只被打包进<code>vendor.js</code>中。</p>
+<p><img src="http://7xt6po.com1.z0.glb.clouddn.com/vendor2.jpg" alt="vendo"></p>
+<h4 id="webpack运行时模块（manifest）"><a href="#webpack运行时模块（manifest）" class="headerlink" title="webpack运行时模块（manifest）"></a>webpack运行时模块（manifest）</h4><ul>
+<li>在前面的<code>步骤2</code>当中webpack在浏览器中加载js模块的运行时代码块也打包进了<code>vendor.js</code>，如果为打包的js文件添加<code>chunkhash</code>，则每次修改 <code>index.js</code>后再次编译打包，由于运行时代码需要重新编译生成，导致<code>vendor.js</code>重新打包并生成新的<code>chunkhash</code>。</li>
+</ul>
+<p><strong>webpack运行时代码块部分：</strong></p>
+<p><img src="http://7xt6po.com1.z0.glb.clouddn.com/webpackjsonp.jpg" alt="webpackjsonp"></p>
+<ul>
+<li>实际项目中我们希望修改业务功能后打包时只重新打包业务模块，而不打包第三方公共基础库。这里我们可以将webpack的<code>运行时代码</code>提取到独立的<code>manifest</code>文件中，这样每次修改业务代码只重新打包生成业务代码模块<code>main.js</code>和运行时代码模块<code>manifest.js</code>，就实现了业务模块和公共基础库模块的分离。</li>
+</ul>
+<p><img src="http://7xt6po.com1.z0.glb.clouddn.com/manifest1.jpg" alt="manifest1"></p>
+<ul>
+<li><code>names</code>字段支持以数组格式来指定<code>基础库模块名称</code>和<code>运行时代码模块名称</code>。</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">module</span>.exports = &#123;</div><div class="line">   <span class="attr">entry</span>: &#123;</div><div class="line">       <span class="attr">main</span>: <span class="string">'./index.js'</span>,</div><div class="line">       <span class="attr">vendor</span>: <span class="string">'moment'</span></div><div class="line">   &#125;,</div><div class="line">   <span class="attr">output</span>: &#123;</div><div class="line">       <span class="attr">filename</span>: <span class="string">'[chunkhash:8].[name].js'</span>,</div><div class="line">       <span class="attr">path</span>: path.resolve(__dirname, <span class="string">'dist'</span>)</div><div class="line">   &#125;,</div><div class="line">   <span class="attr">plugins</span>: [</div><div class="line">       <span class="keyword">new</span> webpack.optimize.CommonsChunkPlugin(&#123;</div><div class="line">           <span class="comment">// manifest是包括webpack运行时runtime的块，可以称为entry chunk</span></div><div class="line">           names: [<span class="string">'vendor'</span>, <span class="string">'manifest'</span>]</div><div class="line">       &#125;)</div><div class="line">   ]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="2、CSS代码分割"><a href="#2、CSS代码分割" class="headerlink" title="2、CSS代码分割"></a>2、CSS代码分割</h3><ul>
+<li><p>实际项目开发当中经常使用webpack的<code>css-loader</code>来将css样式导入到js模块中，再使用<code>style-loader</code>将css样式以<code>&lt;style&gt;</code>标签的形式插入到页面当中，但这种方法的缺点就是无法单独加载并缓存css样式文件，页面展现必须依赖于包含css样式的js模块，从而造成页面闪烁的不佳体验。</p>
+</li>
+<li><p>因此有必要将js模块当中import的css模块提取出来，这时候就需要用到<code>extract-text-webpack-plugin</code>。</p>
+</li>
+</ul>
+<blockquote>
+<p>注意webpack2.x需要使用相应版本的plugin。</p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">npm i --save-dev extract-text-webpack-plugin@beta</div></pre></td></tr></table></figure>
+<p><strong>index.js</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> moment <span class="keyword">from</span> <span class="string">'moment'</span>;</div><div class="line"><span class="keyword">import</span> <span class="string">'./index.css'</span>;</div><div class="line"></div><div class="line"><span class="built_in">console</span>.log(<span class="string">'moment:'</span>, moment().format());</div></pre></td></tr></table></figure>
+<p><strong>webpack.config.js</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> ExtractTextPlugin = <span class="built_in">require</span>(<span class="string">'extract-text-webpack-plugin'</span>);</div><div class="line">......</div><div class="line">   module: &#123;</div><div class="line">       <span class="attr">rules</span>: [&#123;</div><div class="line">           <span class="attr">test</span>: <span class="regexp">/\.css$/</span>,</div><div class="line">           <span class="attr">exclude</span>: <span class="regexp">/node_modules/</span>,</div><div class="line">           <span class="attr">use</span>: ExtractTextPlugin.extract(&#123;</div><div class="line">               <span class="attr">loader</span>: <span class="string">'css-loader'</span>,</div><div class="line">               <span class="attr">options</span>: &#123;&#125;</div><div class="line">           &#125;)</div><div class="line">       &#125;]</div><div class="line">   &#125;,</div><div class="line">   <span class="attr">plugins</span>: [</div><div class="line">       <span class="keyword">new</span> ExtractTextPlugin(&#123; </div><div class="line">           <span class="attr">filename</span>: <span class="string">'bundle.css'</span>, </div><div class="line">           <span class="attr">disable</span>: <span class="literal">false</span>, </div><div class="line">           <span class="attr">allChunks</span>: <span class="literal">true</span> </div><div class="line">       &#125;)</div><div class="line">   ]</div><div class="line">......</div></pre></td></tr></table></figure>
+<p><img src="http://7xt6po.com1.z0.glb.clouddn.com/extract.jpg" alt="extract"></p>
+<h2 id="二、按需加载代码分割"><a href="#二、按需加载代码分割" class="headerlink" title="二、按需加载代码分割"></a>二、按需加载代码分割</h2><ul>
+<li><p>前面介绍的<code>静态资源分离打包</code>需要开发者在webpack配置文件中明确分割点来提取独立的公共模块，这种方式适合提取<code>第三方公共基础库</code>（vue、react、moment等）以及webpack 的<code>运行时代码模块</code>。</p>
+</li>
+<li><p>除此之外webpack还提供了按需加载的代码分割功能，常用于在web应用路由或者用户行为事件逻辑中动态按需加载特定的功能模块<code>chunk</code>，这就是我们本文中后面要重点介绍的。</p>
+</li>
+</ul>
+<h3 id="Code-splitting-with-require-ensure"><a href="#Code-splitting-with-require-ensure" class="headerlink" title="Code splitting with require.ensure"></a>Code splitting with require.ensure</h3><p><a href="https://webpack.js.org/guides/code-splitting-require/" target="_blank" rel="external">webpack1</a>提供了CommonJS风格的 <code>require.ensure()</code>实现模块<code>chunk</code>的异步加载，通过<code>require.ensure()</code>在js代码中建立分割点，编译打包时webpack会将此分割点所指定的代码模块都打包为一个代码模块chunk，然后通过<code>jsonp</code>的方式来按需加载打包后的模块<code>chunk</code>。</p>
+<ul>
+<li>require.ensure()语法</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 空参数</span></div><div class="line"><span class="built_in">require</span>.ensure([], <span class="function"><span class="keyword">function</span>(<span class="params">require</span>)</span>&#123;</div><div class="line">    <span class="keyword">var</span> = <span class="built_in">require</span>(<span class="string">'module-b'</span>);</div><div class="line">&#125;);</div><div class="line"></div><div class="line"><span class="comment">// 依赖模块 "module-a", "module-b"，会和'module-c'打包成一个chunk来加载</span></div><div class="line"><span class="comment">// 不同的分割点可以使用同一个chunkname，这样可以保证不同分割点的代码模块打包为一个chunk</span></div><div class="line"><span class="built_in">require</span>.ensure([<span class="string">"module-a"</span>, <span class="string">"module-b"</span>], <span class="function"><span class="keyword">function</span>(<span class="params">require</span>) </span>&#123;</div><div class="line">    <span class="keyword">var</span> a = <span class="built_in">require</span>(<span class="string">"module-a"</span>);</div><div class="line">    <span class="keyword">var</span> b = <span class="built_in">require</span>(<span class="string">"module-b"</span>);</div><div class="line">    <span class="keyword">var</span> c = <span class="built_in">require</span>(<span class="string">'module-c'</span>);</div><div class="line">&#125;,<span class="string">"custom-chunk-name"</span>);</div></pre></td></tr></table></figure>
+<h3 id="Code-Splitting-with-ES2015"><a href="#Code-Splitting-with-ES2015" class="headerlink" title="Code Splitting with ES2015"></a>Code Splitting with ES2015</h3><p><a href="https://webpack.js.org/guides/migrating/#code-splitting-with-es2015" target="_blank" rel="external">webpack2</a> 的ES2015 loader中提供了<code>import()</code>方法在运行时动态按需加载<code>ES2015 Module</code>。</p>
+<p>webpack将<code>import()</code>看做一个分割点并将其请求的module打包为一个独立的<code>chunk</code>。<code>import()</code>以模块名称作为参数名并且返回一个<code>Promise</code>对象。</p>
+<ul>
+<li>import() 语法</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span>(<span class="string">"./module"</span>).then(<span class="function"><span class="params">module</span> =&gt;</span> &#123;</div><div class="line">    <span class="keyword">return</span> <span class="built_in">module</span>.default;</div><div class="line">&#125;).catch(<span class="function"><span class="params">err</span> =&gt;</span> &#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">"Chunk loading failed"</span>);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<ul>
+<li><p>import()使用须知</p>
+<ul>
+<li><a href="https://github.com/tc39/proposal-dynamic-import" target="_blank" rel="external">import()</a>目前还是处于TC39 proposal阶段。    </li>
+<li>在Babel中使用<code>import()</code>方法，需要安装 <a href="http://babeljs.io/docs/plugins/syntax-dynamic-import/" target="_blank" rel="external">dynamic-import</a>插件并选择使用<code>babel-preset-stage-3</code>处理解析错误。</li>
+</ul>
+</li>
+<li><p>动态表达式 <a href="https://webpack.js.org/guides/migrating/#dynamic-expressions" target="_blank" rel="external">Dynamic expressions</a></p>
+<p>  <code>import()</code>中的传参可支持部分表达式的写法了，如果之前有接触过CommonJS中<code>require()</code>表达式写法，应该不会对此感到陌生。</p>
+<p>  它的操作其实和 CommonJS 类似，给所有可能的文件创建一个环境，当你传递那部分代码的模块还不确定的时候，webpack 会自动生成所有可能的模块，然后根据需求加载。这个特性在前端路由的时候很有用，可以实现按需加载资源。</p>
+<p>  <code>import()</code>会针对每一个读取到的module创建独立的<code>chunk</code>。</p>
+  <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">route</span>(<span class="params">path, query</span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> <span class="keyword">import</span>(<span class="string">`./routes/<span class="subst">$&#123;path&#125;</span>/route`</span>)</div><div class="line">    .then(<span class="function"><span class="params">route</span> =&gt;</span> <span class="keyword">new</span> route.Route(query));</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="bundle-loader"><a href="#bundle-loader" class="headerlink" title="bundle-loader"></a>bundle-loader</h3><p><a href="https://github.com/webpack/bundle-loader" target="_blank" rel="external">bundle-loader</a> 是webpack官方提供的<code>loader</code>，其作用就是对<code>require.ensure</code>的抽象封装为一个<code>wrapper</code>函数来动态加载模块代码，从而避免<code>require.ensure</code>将分割点所有模块代码打包为一个<code>chunk</code>体积过大的问题。</p>
+<ul>
+<li>使用语法：</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 在require bundle时，浏览器会立即加载</span></div><div class="line"><span class="keyword">var</span> waitForChunk = <span class="built_in">require</span>(<span class="string">"bundle!./file.js"</span>);</div><div class="line"> </div><div class="line"><span class="comment">// 使用lazy模式，浏览器并不立即加载，只在调用wrapper函数才加载</span></div><div class="line"><span class="keyword">var</span> waitForChunk = <span class="built_in">require</span>(<span class="string">"bundle?lazy!./file.js"</span>);</div><div class="line"> </div><div class="line"><span class="comment">// 等待加载，在回调中使用</span></div><div class="line">waitForChunk(<span class="function"><span class="keyword">function</span>(<span class="params">file</span>) </span>&#123;</div><div class="line">    <span class="keyword">var</span> file = <span class="built_in">require</span>(<span class="string">"./file.js"</span>);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<ul>
+<li>wrapper函数：</li>
+</ul>
+<p><strong>默认普通模式wrapper：</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="keyword">var</span> cbs = [],data;</div><div class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span>(<span class="params">cb</span>) </span>&#123;</div><div class="line">	<span class="keyword">if</span>(cbs) cbs.push(cb);</div><div class="line">	<span class="keyword">else</span> cb(data);</div><div class="line">&#125;,</div><div class="line"><span class="built_in">require</span>.ensure([], <span class="function"><span class="keyword">function</span>(<span class="params">require</span>) </span>&#123;</div><div class="line">    data = <span class="built_in">require</span>(<span class="string">'./file.js'</span>);</div><div class="line">    <span class="keyword">var</span> callbacks = cbs;</div><div class="line">    cbs = <span class="literal">null</span>;</div><div class="line">    <span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>, l = callbacks.length; i &lt; l; i++) &#123;</div><div class="line">        callbacks[i](data);</div><div class="line">	  &#125;</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p><strong>lazy模式wrapper：</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> (<span class="params">cb</span>) </span>&#123;</div><div class="line">  <span class="built_in">require</span>.ensure([], <span class="function"><span class="keyword">function</span>(<span class="params">require</span>) </span>&#123;</div><div class="line">    <span class="keyword">var</span> app = <span class="built_in">require</span>(<span class="string">'./file.js'</span>);</div><div class="line">    cb(app);</div><div class="line">  &#125;);</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<blockquote>
+<p>使用<code>bundle-loader</code>在代码中require文件的时候只是引入了<code>wrapper</code>函数，而且因为每个文件都会产生一个分离点，导致产生了多个打包文件，而打包文件的载入只有在条件命中的情况下才产生,也就可以按需加载。</p>
+</blockquote>
+<ul>
+<li>支持自定义Chunk名称：</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">require</span>(<span class="string">"bundle-loader?lazy&amp;name=my-chunk!./file.js"</span>);</div></pre></td></tr></table></figure>
+<h3 id="promise-loader"><a href="#promise-loader" class="headerlink" title="promise-loader"></a>promise-loader</h3><p><a href="https://github.com/gaearon/promise-loader" target="_blank" rel="external">promise-loader</a>是<code>bundle-loader</code>的lazy模式的变种，其核心就是使用<code>Promise</code>语法来替代原先的<code>callback</code>回调机制。与<code>bundle-loader</code>类似，<code>require</code>模块的时候只是引入了<code>wrapper</code>函数，不同之处在于调用函数时得到的是一个对模块引用的<code>promise</code>对象，需要在<code>then</code>方法中获取模块对象，并可以使用<code>catch</code>方法来捕获模块加载中的错误。</p>
+<p><code>promise-loader</code>支持使用第三方Promise基础库（如：<a href="https://github.com/petkaantonov/bluebird/" target="_blank" rel="external">bluebird</a>）或者使用<code>global</code>参数来指定使用运行环境已经存在的Promise库。</p>
+<ul>
+<li>使用语法：</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 使用Bluebird promise库</span></div><div class="line"><span class="keyword">var</span> load = <span class="built_in">require</span>(<span class="string">"promise?bluebird!./file.js"</span>);</div><div class="line"></div><div class="line"><span class="comment">// 使用全局Promise对象</span></div><div class="line"><span class="keyword">var</span> load = <span class="built_in">require</span>(<span class="string">"promise?global!./file.js"</span>);</div><div class="line"></div><div class="line">load().then(<span class="function"><span class="keyword">function</span>(<span class="params">file</span>) </span>&#123;</div><div class="line"></div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<ul>
+<li>wrapper函数：</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> <span class="built_in">Promise</span> = <span class="built_in">require</span>(<span class="string">'bluebird'</span>);</div><div class="line"></div><div class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> (<span class="params">namespace</span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span> (<span class="params">resolve</span>) </span>&#123;</div><div class="line">    <span class="built_in">require</span>.ensure([], <span class="function"><span class="keyword">function</span> (<span class="params">require</span>) </span>&#123;</div><div class="line">      resolve(<span class="built_in">require</span>(<span class="string">'./file.js'</span>)[namespace]));</div><div class="line">    &#125;);</div><div class="line">  &#125;);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="es6-promise-loader"><a href="#es6-promise-loader" class="headerlink" title="es6-promise-loader"></a>es6-promise-loader</h3><p><a href="https://github.com/gdi2290/es6-promise-loader" target="_blank" rel="external">es6-promise-loader</a>相比 <code>promise-loader</code>区别就在于使用原生的<code>ES6 Promise</code>对象。</p>
+<ul>
+<li>使用语法：</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> load = <span class="built_in">require</span>(<span class="string">"es6-promise!./file.js"</span>);</div><div class="line"></div><div class="line">load(namespace).then(<span class="function"><span class="keyword">function</span>(<span class="params">file</span>) </span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(file);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<ul>
+<li>wrapper函数：</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> (<span class="params">namespace</span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span> (<span class="params">resolve</span>) </span>&#123;</div><div class="line">    <span class="built_in">require</span>.ensure([], <span class="function"><span class="keyword">function</span> (<span class="params">require</span>) </span>&#123;</div><div class="line">      resolve(<span class="built_in">require</span>(<span class="string">'./file.js'</span>)[namespace]));</div><div class="line">    &#125;);</div><div class="line">  &#125;);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h1 id="React按需加载实现方案"><a href="#React按需加载实现方案" class="headerlink" title="React按需加载实现方案"></a>React按需加载实现方案</h1><h2 id="React-router动态路由"><a href="#React-router动态路由" class="headerlink" title="React router动态路由"></a>React router动态路由</h2><p><code>react-router</code>的 <route>标签有一个叫做<a href="https://github.com/ReactTraining/react-router/blob/master/docs/API.md#getcomponentsnextstate-callback" target="_blank" rel="external">getComponent</a>的异步的方法去获取组件。他是一个function接受两个参数，分别是location和callback。当react-router执行回调函数 callback(null, ourComponent)时，路由只渲染指定组件ourComponent</route></p>
+<ul>
+<li>getComponent异步方法</li>
+</ul>
+<p><strong>使用语法：</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">&lt;Router history=&#123;history&#125;&gt;</div><div class="line">    <span class="xml"><span class="tag">&lt;<span class="name">Route</span> </span></span></div><div class="line">        <span class="attr">path</span>=<span class="string">"/"</span></div><div class="line">        <span class="attr">getComponent</span>=<span class="string">&#123;(nextState,</span> <span class="attr">callback</span>) =&gt; &#123;</div><div class="line">            callback(null, HomePage)</div><div class="line">        &#125;&#125;</div><div class="line">    /&gt;</div><div class="line">     <span class="tag">&lt;<span class="name">Route</span></span></div><div class="line">        <span class="attr">path</span>=<span class="string">"/faq"</span></div><div class="line">        <span class="attr">getComponent</span>=<span class="string">&#123;(nextState,</span> <span class="attr">callback</span>) =&gt; &#123;</div><div class="line">          callback(null, FAQPage);</div><div class="line">        &#125;&#125;</div><div class="line">    /&gt;</div><div class="line"><span class="tag">&lt;/<span class="name">Router</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>这些组件会在需要的时候异步加载。这些组件仍然会在同一个文件中，并且你的应用看起来不会有任何不同。</p>
+<ul>
+<li>require.ensure</li>
+</ul>
+<p>webpack提供的<code>require.ensure</code>可以定义分割点来打包独立的chunk，再配合<code>react-router</code>的<code>getComponent</code>方法就可以实现React组件的按需加载，具体可参照以下文章：</p>
+<ol>
+<li><a href="https://zhuanlan.zhihu.com/p/24595585" target="_blank" rel="external">基于Webpack 2的React组件懒加载</a></li>
+<li><a href="http://robin-front.github.io/2016/04/18/react-router%E5%8A%A8%E6%80%81%E8%B7%AF%E7%94%B1%E4%B8%8EWebpack%E5%88%86%E7%89%87thunks/" target="_blank" rel="external">react-router动态路由与Webpack分片thunks</a></li>
+</ol>
+<h2 id="React懒加载组件"><a href="#React懒加载组件" class="headerlink" title="React懒加载组件"></a>React懒加载组件</h2><p>文章前面提到使用React动态路由来按需加载react组件，但实际项目开发中很多时候不需要或者没法引入react-router，我们就可以使用webpack官方提供的<code>React懒加载组件</code>来动态加载指定的React组件，源代码见 <a href="https://webpack.js.org/guides/lazy-load-react/#the-code" target="_blank" rel="external">LazilyLoad</a>。</p>
+<h3 id="LazilyLoad懒加载组件"><a href="#LazilyLoad懒加载组件" class="headerlink" title="LazilyLoad懒加载组件"></a>LazilyLoad懒加载组件</h3><ul>
+<li>LazilyLoad使用：</li>
+</ul>
+<p><strong>webpack2.x</strong> <code>import</code>方法异步加载ES2015模块文件，返回一个Promise对象。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">&lt;LazilyLoad modules=&#123;&#123;</div><div class="line">  <span class="attr">TodoHandler</span>: <span class="function"><span class="params">()</span> =&gt;</span> importLazy(<span class="keyword">import</span>(<span class="string">'./components/TodoHandler'</span>)),</div><div class="line">  <span class="attr">TodoMenuHandler</span>: <span class="function"><span class="params">()</span> =&gt;</span> importLazy(<span class="keyword">import</span>(<span class="string">'./components/TodoMenuHandler'</span>)),</div><div class="line">  <span class="attr">TodoMenu</span>: <span class="function"><span class="params">()</span> =&gt;</span> importLazy(<span class="keyword">import</span>(<span class="string">'./components/TodoMenu'</span>)),</div><div class="line">&#125;&#125;&gt;</div><div class="line">&#123;(&#123;TodoHandler, TodoMenuHandler, TodoMenu&#125;) =&gt; (</div><div class="line">  <span class="xml"><span class="tag">&lt;<span class="name">TodoHandler</span>&gt;</span></span></div><div class="line">    <span class="tag">&lt;<span class="name">TodoMenuHandler</span>&gt;</span></div><div class="line">      <span class="tag">&lt;<span class="name">TodoMenu</span> /&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">TodoMenuHandler</span>&gt;</span></div><div class="line">  <span class="tag">&lt;/<span class="name">TodoHandler</span>&gt;</span></div><div class="line">)&#125;</div><div class="line">&lt;<span class="regexp">/LazilyLoad&gt;</span></div></pre></td></tr></table></figure>
+<p><strong>webpack 1.x</strong> 使用前文中提到的<code>promise-loader</code>或者<code>es6-promise-loader</code>封装按需加载组件。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">App</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line"></div><div class="line">   render() &#123;</div><div class="line">        <span class="keyword">return</span> (</div><div class="line">            <span class="xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span></div><div class="line">                <span class="tag">&lt;<span class="name">LazilyLoad</span> <span class="attr">modules</span>=<span class="string">&#123;&#123;</span></span></div><div class="line">                    <span class="attr">LoadedLate:</span> () =&gt; require('es6-promise!./lazy/LoadedLate')(),</div><div class="line">                    LoadedLate2: () =&gt; require('es6-promise!./lazy/LoadedLate2')()</div><div class="line">                &#125;&#125;&gt;</div><div class="line">                    &#123;(&#123;LoadedLate,LoadedLate2&#125;) =&gt; (</div><div class="line">                        <span class="tag">&lt;<span class="name">div</span>&gt;</span></div><div class="line">                            <span class="tag">&lt;<span class="name">LoadedLate</span> /&gt;</span></div><div class="line">                            <span class="tag">&lt;<span class="name">LoadedLate2</span> /&gt;</span></div><div class="line">                        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></div><div class="line">                    )&#125;</div><div class="line">                <span class="tag">&lt;/<span class="name">LazilyLoad</span>&gt;</span></div><div class="line">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></div><div class="line">        );</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<ul>
+<li><code>importLazy</code>方法是为了兼容Babel/ES2015模块，返回模块的<code>default</code>属性。</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="keyword">const</span> importLazy = <span class="function">(<span class="params">promise</span>) =&gt;</span> (</div><div class="line">    promise.then(<span class="function">(<span class="params">result</span>) =&gt;</span> result.default || result)</div><div class="line">);</div></pre></td></tr></table></figure>
+<h2 id="React高阶组件懒加载"><a href="#React高阶组件懒加载" class="headerlink" title="React高阶组件懒加载"></a>React高阶组件懒加载</h2><blockquote>
+<p><a href="https://zhuanlan.zhihu.com/p/24776678?hmsr=toutiao.io&amp;utm_medium=toutiao.io&amp;utm_source=toutiao.io" target="_blank" rel="external">高阶组件</a> (Higher Order Component)就是一个 React 组件包裹着另外一个 React 组件。</p>
+</blockquote>
+<p>这种模式通常使用<code>工厂函数</code>来实现。</p>
+<p><del>使用高阶组件包裹普通的React组件后，其调用方式与普通的React组件完全一致。</del></p>
+<h3 id="封装懒加载组件LazilyLoad的高阶组件工厂函数"><a href="#封装懒加载组件LazilyLoad的高阶组件工厂函数" class="headerlink" title="封装懒加载组件LazilyLoad的高阶组件工厂函数"></a>封装懒加载组件LazilyLoad的高阶组件工厂函数</h3><p><strong>LazilyLoadFactory</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="keyword">const</span> LazilyLoadFactory = <span class="function">(<span class="params">Component, modules</span>) =&gt;</span> &#123;</div><div class="line">    <span class="keyword">return</span> <span class="function">(<span class="params">props</span>) =&gt;</span> (</div><div class="line">        <span class="xml"><span class="tag">&lt;<span class="name">LazilyLoad</span> <span class="attr">modules</span>=<span class="string">&#123;modules&#125;</span>&gt;</span></span></div><div class="line">            &#123;(mods) =&gt; <span class="tag">&lt;<span class="name">Component</span> &#123;<span class="attr">...mods</span>&#125; &#123;<span class="attr">...props</span>&#125; /&gt;</span>&#125;</div><div class="line">        <span class="tag">&lt;/<span class="name">LazilyLoad</span>&gt;</span></div><div class="line">    );</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<h3 id="使用高阶组件实现按需加载"><a href="#使用高阶组件实现按需加载" class="headerlink" title="使用高阶组件实现按需加载"></a>使用高阶组件实现按需加载</h3><h4 id="webpack-2-x"><a href="#webpack-2-x" class="headerlink" title="webpack 2.x"></a>webpack 2.x</h4><figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Load_jQuery</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line"></div><div class="line">    componentDidMount() &#123;</div><div class="line">        <span class="built_in">console</span>.log(<span class="string">'Load_jQuery props:'</span>, <span class="keyword">this</span>.props);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    render() &#123;</div><div class="line">        <span class="keyword">return</span> (</div><div class="line">            <span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">ref</span>=<span class="string">&#123;(ref)</span> =&gt;</span> this.props.$(ref).css('background-color', 'red')&#125;&gt;</span></div><div class="line">                Hello jQuery</div><div class="line">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></div><div class="line">        );</div><div class="line">    &#125;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="comment">// 使用工厂函数封装Load_jQuery为高阶组件，将异步加载的jQuery模块对象以props的形式来获取并使用</span></div><div class="line"><span class="keyword">export</span> <span class="keyword">default</span> LazilyLoadFactory(Load_jQuery, &#123;</div><div class="line">    <span class="attr">$</span>: <span class="function"><span class="params">()</span> =&gt;</span> <span class="keyword">import</span>(<span class="string">'jquery'</span>)</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<h4 id="webpack-1-x"><a href="#webpack-1-x" class="headerlink" title="webpack 1.x"></a>webpack 1.x</h4><figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Load_jQuery</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line"></div><div class="line">   render() &#123;</div><div class="line">        <span class="keyword">return</span> (</div><div class="line">            <span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">ref</span>=<span class="string">&#123;(ref)</span> =&gt;</span> this.props.$(ref).css('background-color', 'red')&#125;&gt;</span></div><div class="line">                Hello jQuery</div><div class="line">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></div><div class="line">        );</div><div class="line">    &#125;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="keyword">export</span> <span class="keyword">default</span> LazilyLoadFactory(Load_jQuery, &#123;</div><div class="line">    <span class="attr">$</span>: <span class="function"><span class="params">()</span> =&gt;</span> <span class="built_in">require</span>(<span class="string">'es6-promise!jquery'</span>)()</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<h3 id="ES-Decorator"><a href="#ES-Decorator" class="headerlink" title="ES Decorator"></a>ES Decorator</h3><p>除了工厂函数方式扩展实现高阶组件，还可通过 ES草案中的 Decorator(<a href="https://medium.com/google-developers/exploring-es7-decorators-76ecb65fb841" target="_blank" rel="external">https://medium.com/google-developers/exploring-es7-decorators-76ecb65fb841</a>) 语法来实现。Decorator 可以通过返回特定的 descriptor 来”修饰” 类属性，也可以直接”修饰”一个类。即传入一个已有的类，通过 Decorator 函数”修饰”成了一个新的类。</p>
+<ul>
+<li>使用方法：</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// ES Decorators函数实现高阶组件封装</span></div><div class="line"><span class="comment">// 参考 http://technologyadvice.github.io/es7-decorators-babel6/</span></div><div class="line"><span class="keyword">const</span> LazilyLoadDecorator = <span class="function">(<span class="params">Component</span>) =&gt;</span> &#123;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> LazilyLoadFactory(Component, &#123;</div><div class="line">        <span class="attr">$</span>: <span class="function"><span class="params">()</span> =&gt;</span> <span class="built_in">require</span>(<span class="string">'jquery'</span>)(),</div><div class="line">    &#125;);</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="comment">// ES Decorators语法</span></div><div class="line"><span class="comment">// 需要依赖babel-plugin-transform-decorators-legacy</span></div><div class="line"><span class="comment">// babel-loader配置使用plugins: ["transform-decorators-legacy"]</span></div><div class="line">@LazilyLoadDecorator</div><div class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="class"><span class="keyword">class</span> <span class="title">Load_jQuery</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line"></div><div class="line">    componentDidMount() &#123;</div><div class="line">        <span class="built_in">console</span>.log(<span class="string">'Load_jQuery props:'</span>, <span class="keyword">this</span>.props);</div><div class="line"></div><div class="line">    &#125;</div><div class="line"></div><div class="line">    render() &#123;</div><div class="line">        <span class="keyword">return</span> (</div><div class="line">            <span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">ref</span>=<span class="string">&#123;(ref)</span> =&gt;</span> this.props.$(ref).css('background-color', 'red')&#125;&gt;</span></div><div class="line">                Hello jQuery</div><div class="line">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></div><div class="line">        );</div><div class="line">    &#125;</div><div class="line"></div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<h3 id="引用被高阶组件包裹的普通组件"><a href="#引用被高阶组件包裹的普通组件" class="headerlink" title="引用被高阶组件包裹的普通组件"></a>引用被高阶组件包裹的普通组件</h3><figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> Load_jQuery <span class="keyword">from</span> <span class="string">'./js/Load_jQuery'</span>;</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">App</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line">    <span class="keyword">constructor</span>() &#123;</div><div class="line">        <span class="keyword">super</span>(...arguments);</div><div class="line">        <span class="keyword">this</span>.state = &#123;</div><div class="line">            <span class="attr">load</span>: <span class="literal">false</span>,</div><div class="line">        &#125;;</div><div class="line">        <span class="keyword">this</span>.handleClick = <span class="keyword">this</span>.handleClick.bind(<span class="keyword">this</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    handleClick() &#123;</div><div class="line">        <span class="keyword">this</span>.setState(&#123;</div><div class="line">            <span class="attr">load</span>: !<span class="keyword">this</span>.state.load,</div><div class="line">        &#125;);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    render() &#123;</div><div class="line">        <span class="keyword">return</span> (</div><div class="line">            <span class="xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span></div><div class="line">                <span class="tag">&lt;<span class="name">p</span>&gt;</span></div><div class="line">                    <span class="tag">&lt;<span class="name">a</span></span></div><div class="line">                        <span class="attr">style</span>=<span class="string">&#123;&#123;</span> <span class="attr">color:</span> '<span class="attr">blue</span>', <span class="attr">cursor:</span> '<span class="attr">pointer</span>' &#125;&#125;</div><div class="line">                        <span class="attr">onClick</span>=<span class="string">&#123;this.handleClick&#125;</span>&gt;点击加载jQuery<span class="tag">&lt;/<span class="name">a</span>&gt;</span></div><div class="line">                <span class="tag">&lt;/<span class="name">p</span>&gt;</span></div><div class="line"></div><div class="line">                &#123;this.state.load ?</div><div class="line">                    <span class="tag">&lt;<span class="name">div</span>&gt;</span><span class="tag">&lt;<span class="name">Load_jQuery</span> /&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></div><div class="line">                    : null</div><div class="line">                &#125;</div><div class="line">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></div><div class="line">        );</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<h3 id="基于webpack-1-x实现react组件的懒加载示例"><a href="#基于webpack-1-x实现react组件的懒加载示例" class="headerlink" title="基于webpack 1.x实现react组件的懒加载示例"></a>基于webpack 1.x实现react组件的懒加载示例</h3><ul>
+<li><p><a href="https://github.com/fengmiaosen/webpack-react-lazy-load" target="_blank" rel="external">示例代码</a></p>
+</li>
+<li><p><a href="https://fengmiaosen.github.io/webpack-react-lazy-load/dist/">在线demo</a></p>
+</li>
+<li><p>按需加载请求</p>
+</li>
+</ul>
+<p><img src="http://7xt6po.com1.z0.glb.clouddn.com/lazyloaded.png" alt="lazyloaded"></p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ul>
+<li><a href="https://zhuanlan.zhihu.com/p/24595585" target="_blank" rel="external">基于Webpack 2的React组件懒加载</a></li>
+<li><a href="http://robin-front.github.io/2016/04/18/react-router%E5%8A%A8%E6%80%81%E8%B7%AF%E7%94%B1%E4%B8%8EWebpack%E5%88%86%E7%89%87thunks/" target="_blank" rel="external">react-router动态路由与Webpack分片thunks</a></li>
+<li><a href="https://webpack.js.org/guides/lazy-load-react/" target="_blank" rel="external">Lazy Loading - React</a></li>
+<li><a href="https://github.com/gdi2290/es6-promise-loader" target="_blank" rel="external">es6-promise-loader</a></li>
+<li><a href="https://github.com/gaearon/promise-loader" target="_blank" rel="external">promise-loader</a></li>
+<li><a href="https://github.com/webpack/bundle-loader" target="_blank" rel="external">bundle-loader</a></li>
+<li><a href="https://github.com/systemjs/systemjs/blob/master/docs/es6-modules-overview.md" target="_blank" rel="external">es6-modules-overview</a></li>
+<li><a href="http://henleyedition.com/implicit-code-splitting-with-react-router-and-webpack/" target="_blank" rel="external">Implicit Code Splitting and Chunk Loading with React Router and Webpack</a></li>
+<li><a href="http://www.alloyteam.com/2016/02/code-split-by-routes/" target="_blank" rel="external">在Webpack中使用Code Splitting实现按需加载</a></li>
+<li><a href="https://webpack.js.org/guides/code-splitting-require/" target="_blank" rel="external">Code Splitting - Using require.ensure</a></li>
+<li><a href="https://webpack.js.org/guides/migrating/#code-splitting-with-es2015" target="_blank" rel="external">Code Splitting with ES2015</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/24776678?hmsr=toutiao.io&amp;utm_medium=toutiao.io&amp;utm_source=toutiao.io" target="_blank" rel="external">深入理解 React 高阶组件</a></li>
+<li><a href="http://taobaofed.org/blog/2015/11/16/es7-decorator/index.html" target="_blank" rel="external">ES7 Decorator 装饰者模式</a></li>
+<li><a href="http://otakustay.com/introduction-to-es-decorator/" target="_blank" rel="external">ES Decorators简介</a></li>
+</ul>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/2017/01/10/react-lifecycle/" data-toggle="tooltip" data-placement="top" title="React组件生命周期">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/2017/01/07/write-webpack-loader/" data-toggle="tooltip" data-placement="top" title="如何编写一个webpack loader">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#react" title="react">react</a>
+                        
+                          <a class="tag" href="/tags/#webpack" title="webpack">webpack</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="http://huangxuan.me" target="_blank">Hux Blog</a></li>
+                    
+                </ul>
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "fengmiaosen";
+    var disqus_identifier = "http://fengmiaosen.github.io/2017/01/08/webpack-react-lazy-load/";
+    var disqus_url = "http://fengmiaosen.github.io/2017/01/08/webpack-react-lazy-load/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+                    <li>
+                        <a target="_blank" href="https://www.zhihu.com/people/fengmiaosen">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa  fa-stack-1x fa-inverse">知</i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+                    <li>
+                        <a target="_blank" href="http://weibo.com/fms86">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-weibo fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/fengmiaosen">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 冯淼森的博客 2017 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="/js/bootstrap.min.js"></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("http://fengmiaosen.github.io/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-76984426-1 ';
+    var _gaDomain = 'fengmiaosen';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+<script>
+    // dynamic User by Hux
+    var _baId = '4cc1f2d8f3067386cc5cdb626a202900';
+
+    // Originial
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?" + _baId;
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="http://fengmiaosen.github.io/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

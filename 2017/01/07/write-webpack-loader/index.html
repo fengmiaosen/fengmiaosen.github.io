@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          如何编写一个webpack loader - 冯淼森的博客
+        
+    </title>
+
+    <link rel="canonical" href="http://fengmiaosen.github.io/2017/01/07/write-webpack-loader/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Pygments Highlight CSS -->
+    <link rel="stylesheet" href="/css/highlight.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">冯淼森的博客</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archives/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="http://fengmiaosen.github.io/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('/img/home-bg.jpg')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Node.js" title="Node.js">Node.js</a>
+                        
+                          <a class="tag" href="/tags/#webpack" title="webpack">webpack</a>
+                        
+                    </div>
+                    <h1>如何编写一个webpack loader</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by fengmiaosen on
+                        2017-01-07
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p><img src="http://7xt6po.com1.z0.glb.clouddn.com/webpack-1.png" alt="webpack"></p>
+<a id="more"></a>
+<h2 id="loader是什么"><a href="#loader是什么" class="headerlink" title="loader是什么"></a>loader是什么</h2><h3 id="webpack官方定义"><a href="#webpack官方定义" class="headerlink" title="webpack官方定义"></a>webpack<a href="https://webpack.js.org/api/loaders/" target="_blank" rel="external">官方定义</a></h3><blockquote>
+<p><em>A loader is just a JavaScript module that exports a function</em></p>
+</blockquote>
+<ul>
+<li><p>从语法角度看，loader就是一个普通的Node.js模块，只是必须以函数格式导出来供使用。如果有必要可以使用一切Node.js功能模块。</p>
+</li>
+<li><p>从功能角度看，一个loader是在应用中作用于指定格式的资源文件并将其按照一定格式转换输出。例如：sass-loader将scss文件转换为标准css文件输出。</p>
+</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// base loader</span></div><div class="line"><span class="keyword">var</span> fs = <span class="built_in">require</span>(<span class="string">"fs"</span>);</div><div class="line"></div><div class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span>(<span class="params">source</span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> source;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<h3 id="loader-的种类"><a href="#loader-的种类" class="headerlink" title="loader 的种类"></a>loader 的种类</h3><ul>
+<li><code>preloaders</code> 就是在调用loader之前需要调用的loader, 他不做任何代码的转换，只是进行检查</li>
+<li><code>loaders</code> 就是我们本文章重点讲述的用来处理文件，做代码转换的loader，例如将 scss文件转换为css文件。</li>
+<li><code>postloaders</code> 就是在调用loader之后需要调用的loader，比如进行<code>代码覆盖率测试</code>。</li>
+</ul>
+<h3 id="loader如何使用"><a href="#loader如何使用" class="headerlink" title="loader如何使用"></a>loader如何使用</h3><ul>
+<li><p>loader 是支持链式执行的，如处理 sass 文件的 loader，可以由 sass-loader、css-loader、style-loader 组成，由 compiler 编译器对其由右向左执行，第一个 loader 将会拿到需处理的原内容，上一个 loader 处理后的结果回传给下一个接着处理，最后的 Loader 将处理后的结果以 String 或 Buffer 的形式返回给 compiler。</p>
+</li>
+<li><p>每个 loader 只做该做的事，纯粹的事，而不希望一箩筐的功能都集成到一个 loader 中。</p>
+</li>
+<li><p>loader函数还可以选择使用 JSON 格式来传递数据。</p>
+</li>
+</ul>
+<h3 id="loader-调用语法"><a href="#loader-调用语法" class="headerlink" title="loader 调用语法"></a>loader 调用语法</h3><ul>
+<li>命令行调用</li>
+</ul>
+<figure class="highlight fortran"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">webpack --<span class="keyword">module</span>-<span class="keyword">bind</span> jade --<span class="keyword">module</span>-<span class="keyword">bind</span> <span class="string">'css=style!css'</span></div></pre></td></tr></table></figure>
+<ul>
+<li>require调用</li>
+</ul>
+<p>在需要作用的资源文件名前面加上<code>loader</code>名称和 <code>！</code>感叹号。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">require</span>(<span class="string">'style-loader!css-loader?modules!./styles.css'</span>);</div></pre></td></tr></table></figure>
+<ul>
+<li>webpack配置文件</li>
+</ul>
+<blockquote>
+<p>webpack 2.x语法中需要写全loader全名，不再允许省略<code>-loader</code></p>
+</blockquote>
+<p><strong>语法格式一：</strong></p>
+<blockquote>
+<p>webpack 1.x语法</p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">    <span class="attr">module</span>: &#123;</div><div class="line">        <span class="attr">loaders</span>: [&#123;</div><div class="line">            <span class="attr">test</span>: <span class="regexp">/\.scss$/</span>,</div><div class="line">            <span class="attr">loader</span>: <span class="string">'style!css!sass'</span></div><div class="line">        &#125;]</div><div class="line">    &#125;</div><div class="line">&#125;；</div></pre></td></tr></table></figure>
+<blockquote>
+<p>webpack 2.x语法</p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">    <span class="attr">module</span>: &#123;</div><div class="line">        <span class="attr">loaders</span>: [&#123;</div><div class="line">            <span class="attr">test</span>: <span class="regexp">/\.scss$/</span>,</div><div class="line">            <span class="attr">loader</span>: <span class="string">'style-loader!css-loader!sass-loader'</span></div><div class="line">        &#125;]</div><div class="line">    &#125;</div><div class="line">&#125;；</div></pre></td></tr></table></figure>
+<p><strong>语法格式二：</strong></p>
+<blockquote>
+<p>webpack 1.x</p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">    <span class="attr">module</span>: &#123;</div><div class="line">        <span class="attr">loaders</span>: [&#123;</div><div class="line">            <span class="attr">test</span>: <span class="regexp">/\.scss$/</span>,</div><div class="line">            <span class="attr">loader</span>: [<span class="string">'style'</span>,<span class="string">'css'</span>,<span class="string">'sass'</span>]</div><div class="line">        &#125;]</div><div class="line">    &#125;</div><div class="line">&#125;；</div></pre></td></tr></table></figure>
+<p><strong>语法格式三：</strong></p>
+<blockquote>
+<p>webpack 2.x 语法</p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">    <span class="attr">module</span>: &#123;</div><div class="line">        <span class="attr">rules</span>: [&#123;</div><div class="line">            <span class="attr">test</span>: <span class="regexp">/\.scss$/</span>,</div><div class="line">            <span class="attr">use</span>: [</div><div class="line">                <span class="string">'style-loader'</span>,</div><div class="line">                <span class="string">'css-loader'</span>,</div><div class="line">                &#123;</div><div class="line">                    <span class="attr">loader</span>: <span class="string">"sass-loader"</span>,</div><div class="line">                    <span class="attr">options</span>: &#123;</div><div class="line">                        <span class="comment">/* ... */</span></div><div class="line">                    &#125;</div><div class="line">                &#125;</div><div class="line">            ]</div><div class="line">        &#125;]</div><div class="line">    &#125;</div><div class="line">&#125;；</div></pre></td></tr></table></figure>
+<h3 id="loader-执行顺序"><a href="#loader-执行顺序" class="headerlink" title="loader 执行顺序"></a>loader 执行顺序</h3><p>当一个文件从文件系统中被读取进入到loader执行序列中，其执行次序如下：</p>
+<ol>
+<li>webpack配置文件中 <code>preloaders</code> 配置项 <code>（webpack2.x移除）</code></li>
+<li>webpack配置文件中 <code>loaders</code> 配置项</li>
+<li><p>request请求中指定的loaders，例如：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="title">require</span><span class="params">(<span class="string">'raw!./file.js'</span>)</span></span></div></pre></td></tr></table></figure>
+</li>
+<li><p>webpack配置文件中 <code>postloaders</code> 配置项<code>（webpack2.x移除）</code></p>
+</li>
+</ol>
+<blockquote>
+<p>在某些情况下，我们需要在js模块请求中覆盖webpack配置文件中的loaders顺序来实现一些特定需求。具体规则如下：</p>
+</blockquote>
+<ul>
+<li>模块请求参数最前面添加感叹号 <code>!</code>来禁用配置文件中的<code>preLoaders</code></li>
+</ul>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="title">require</span><span class="params">(<span class="string">"!raw!./script.coffee"</span>)</span></span></div></pre></td></tr></table></figure>
+<ul>
+<li>模块请求参数最前面添加双感叹号 <code>!!</code>来禁用配置文件中所有的<code>loaders</code></li>
+</ul>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="title">require</span><span class="params">(<span class="string">"!!raw!./script.coffee"</span>)</span></span></div></pre></td></tr></table></figure>
+<ul>
+<li>模块请求参数最前面添加 <code>-!</code>来禁用配置文件中<code>preLoaders</code>和<code>loaders</code>，除了<code>postLoaders</code></li>
+</ul>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="title">require</span><span class="params">(<span class="string">"-!raw!./script.coffee"</span>)</span></span></div></pre></td></tr></table></figure>
+<blockquote>
+<p>官方的建议</p>
+</blockquote>
+<ul>
+<li>对于结果为js文件的情况，建议在<code>loaders</code>中处理</li>
+<li>对于预先编译的非js（如coffee等）转换js文件，建议在<code>preloader</code>中处理，如果不是全局应用也可以在 <code>loaders</code>中处理</li>
+<li>对于相同的语言，建议<code>preloader</code> 和 <code>postloader</code> 过程中处理</li>
+</ul>
+<h2 id="如何编写一个loader"><a href="#如何编写一个loader" class="headerlink" title="如何编写一个loader"></a>如何编写一个loader</h2><h3 id="loader-输出处理结果"><a href="#loader-输出处理结果" class="headerlink" title="loader 输出处理结果"></a>loader 输出处理结果</h3><ul>
+<li>同步模式（sync mode）</li>
+</ul>
+<p>直接返回loader的处理结果。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span>(<span class="params">content</span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> someSyncOperation(content);</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<ul>
+<li>异步模式（async mode）</li>
+</ul>
+<p>调用 <code>this.async()</code>来获取<code>this.callback()</code>方法，然后在异步调用的回调函数中通过<code>callback</code>返回<code>null</code>以及<code>处理结果</code>。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span>(<span class="params">content</span>) </span>&#123;</div><div class="line">    <span class="keyword">var</span> callback = <span class="keyword">this</span>.async();</div><div class="line">    <span class="keyword">if</span>(!callback) <span class="keyword">return</span> someSyncOperation(content);</div><div class="line">    someAsyncOperation(content, <span class="function"><span class="keyword">function</span>(<span class="params">err, result</span>) </span>&#123;</div><div class="line">        <span class="keyword">if</span>(err) <span class="keyword">return</span> callback(err);</div><div class="line">        callback(<span class="literal">null</span>, result);</div><div class="line">    &#125;);</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<h3 id="Raw-loader"><a href="#Raw-loader" class="headerlink" title="Raw loader"></a>Raw loader</h3><p>默认情况下，不同loader之间是以UTF-8格式的文本字符串来传递数据。我们可以通过设置<code>module.exports.raw = true;</code> 来选择使用<code>Buffer</code>数据格式来传递数据，而编译器会负责相邻loader之间的格式转换。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span>(<span class="params">content</span>) </span>&#123;</div><div class="line">    assert(content <span class="keyword">instanceof</span> Buffer);</div><div class="line">    <span class="keyword">return</span> someSyncOperation(content);</div><div class="line">    <span class="comment">// return value can be a `Buffer` too</span></div><div class="line">    <span class="comment">// This is also allowed if loader is not "raw"</span></div><div class="line">&#125;;</div><div class="line"><span class="built_in">module</span>.exports.raw = <span class="literal">true</span>;</div></pre></td></tr></table></figure>
+<h3 id="Pitching-Loader"><a href="#Pitching-Loader" class="headerlink" title="Pitching Loader"></a>Pitching Loader</h3><p>多个loader的链式调用默认都是遵循从右到左的顺序。但在某些情况下，loaders并不关心前一个loader的处理结果或者资源文件数据，它仅仅关心元数据<code>metadata</code>即原始输入内容。</p>
+<p>而<code>pitch</code>方法则支持从左到右的执行顺序，当pitch方法执行完毕，loaders调用流程反转并跳过剩余未执行的loaders，继续调用当前loader更左侧的loaders。并且通过 <code>data</code>属性来在当前loader的<code>pitch</code>方法调用和 <code>normal</code>方法调用之间来传递数据。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span>(<span class="params">content</span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> someSyncOperation(content, <span class="keyword">this</span>.data.value);</div><div class="line">&#125;;</div><div class="line"><span class="built_in">module</span>.exports.pitch = <span class="function"><span class="keyword">function</span>(<span class="params">remainingRequest, precedingRequest, data</span>) </span>&#123;</div><div class="line">    <span class="keyword">if</span>(someCondition()) &#123;</div><div class="line">        <span class="comment">// fast exit</span></div><div class="line">        <span class="keyword">return</span> <span class="string">"module.exports = require("</span> + <span class="built_in">JSON</span>.stringify(<span class="string">"-!"</span> + remainingRequest) + <span class="string">");"</span>;</div><div class="line">    &#125;</div><div class="line">    data.value = <span class="number">42</span>;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<h2 id="如何做好loader开发"><a href="#如何做好loader开发" class="headerlink" title="如何做好loader开发"></a>如何做好loader开发</h2><h3 id="善用loader中的this"><a href="#善用loader中的this" class="headerlink" title="善用loader中的this"></a>善用loader中的this</h3><p>loader函数作用域内的 <code>this</code> 变量挂载了一些很有用的方法属性来实现诸如异步调用、query参数获取等功能。</p>
+<ul>
+<li>query则能获取到 Loader 上附有的参数。 如 <code>require(&quot;./somg-loader?ls&quot;)</code>; 通过 query 就可以得到 “ls” 了。</li>
+<li><code>emitFile</code> 能够让开发者更方便的输出一个 file 文件，这是 webpack 特有的方法，使用的方法也很直接</li>
+</ul>
+<figure class="highlight nimrod"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">emitFile(name: <span class="built_in">string</span>, content: <span class="type">Buffer</span>|<span class="type">String</span>, sourceMap: <span class="meta">&#123;...&#125;</span>)</div></pre></td></tr></table></figure>
+<h3 id="启用结果缓存-cacheable"><a href="#启用结果缓存-cacheable" class="headerlink" title="启用结果缓存 cacheable"></a>启用结果缓存 cacheable</h3><figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span>(<span class="params">source</span>) </span>&#123;</div><div class="line">    <span class="keyword">this</span>.cacheable();</div><div class="line">    <span class="keyword">return</span> source;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<h3 id="调用exec-方法执行一些代码片段。"><a href="#调用exec-方法执行一些代码片段。" class="headerlink" title="调用exec 方法执行一些代码片段。"></a>调用<code>exec</code> 方法执行一些代码片段。</h3><figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">exec(code: string, <span class="attr">filename</span>: string)</div></pre></td></tr></table></figure>
+<h3 id="loader-utils"><a href="#loader-utils" class="headerlink" title="loader-utils"></a>loader-utils</h3><p>loader开发中经常用到的一个工具模块，其中提供了一些很有用的解析方法。<a href="https://github.com/webpack/loader-utils" target="_blank" rel="external">点击查看文档</a></p>
+<h2 id="code-split"><a href="#code-split" class="headerlink" title="code split"></a>code split</h2><p>require.ensure使得我们可在所有的dependencies项加载完毕后，再执行回调</p>
+<blockquote>
+<p>require.ensure仅仅是加载组件，并不会执行，若要执行，需要借助传进去的require参数</p>
+</blockquote>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">require</span>.ensure([<span class="string">"module-a"</span>, <span class="string">"module-b"</span>], <span class="function"><span class="keyword">function</span>(<span class="params">require</span>) </span>&#123;</div><div class="line">    <span class="keyword">var</span> a = <span class="built_in">require</span>(<span class="string">"module-a"</span>);</div><div class="line">    <span class="comment">// ...</span></div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://github.com/joeyguo/blog/issues/4" target="_blank" rel="external">如何开发一个 Webpack Loader ( 一 )</a></li>
+<li><a href="https://webpack.js.org/api/loaders/" target="_blank" rel="external">Loader API</a></li>
+<li><a href="https://webpack.github.io/docs/loaders.html" target="_blank" rel="external">loaders</a></li>
+<li><a href="http://webpack.github.io/docs/using-loaders.html" target="_blank" rel="external">using-loaders</a></li>
+<li><a href="https://webpack.js.org/concepts/loaders/" target="_blank" rel="external">loader concepts</a></li>
+<li><a href="http://blog.csdn.net/zhbhun/article/details/46826129" target="_blank" rel="external">webpack: require.ensure与require AMD的区别</a></li>
+</ul>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/2017/01/08/webpack-react-lazy-load/" data-toggle="tooltip" data-placement="top" title="基于webpack实现react组件的按需加载">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/2016/12/16/promise-req/" data-toggle="tooltip" data-placement="top" title="promise.all并行请求">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#Node.js" title="Node.js">Node.js</a>
+                        
+                          <a class="tag" href="/tags/#webpack" title="webpack">webpack</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="http://huangxuan.me" target="_blank">Hux Blog</a></li>
+                    
+                </ul>
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "fengmiaosen";
+    var disqus_identifier = "http://fengmiaosen.github.io/2017/01/07/write-webpack-loader/";
+    var disqus_url = "http://fengmiaosen.github.io/2017/01/07/write-webpack-loader/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+                    <li>
+                        <a target="_blank" href="https://www.zhihu.com/people/fengmiaosen">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa  fa-stack-1x fa-inverse">知</i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+                    <li>
+                        <a target="_blank" href="http://weibo.com/fms86">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-weibo fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/fengmiaosen">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 冯淼森的博客 2017 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="/js/bootstrap.min.js"></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("http://fengmiaosen.github.io/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-76984426-1 ';
+    var _gaDomain = 'fengmiaosen';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+<script>
+    // dynamic User by Hux
+    var _baId = '4cc1f2d8f3067386cc5cdb626a202900';
+
+    // Originial
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?" + _baId;
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="http://fengmiaosen.github.io/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

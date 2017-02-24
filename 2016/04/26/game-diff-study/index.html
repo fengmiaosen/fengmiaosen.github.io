@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          HTML5游戏引擎对比分析调研 - 冯淼森的博客
+        
+    </title>
+
+    <link rel="canonical" href="http://fengmiaosen.github.io/2016/04/26/game-diff-study/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Pygments Highlight CSS -->
+    <link rel="stylesheet" href="/css/highlight.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">冯淼森的博客</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archives/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="http://fengmiaosen.github.io/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('/img/home-bg.jpg')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#html5" title="html5">html5</a>
+                        
+                          <a class="tag" href="/tags/#游戏" title="游戏">游戏</a>
+                        
+                    </div>
+                    <h1>HTML5游戏引擎对比分析调研</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by fengmiaosen on
+                        2016-04-26
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <blockquote>
+<p>选取了国内外3款比较有代表性的游戏开发引擎（<strong><a href="http://hiloteam.github.io/index.html" target="_blank" rel="external">Hilo</a>、<a href="http://edn.egret.com/cn/" target="_blank" rel="external">Egret</a>、<a href="http://phaser.io/" target="_blank" rel="external">Phaser</a></strong>），从<code>引擎体积</code>、<code>渲染性能</code>、<code>学习开发成本</code>、<code>功能特性</code>、<code>开发入门</code>、<code>辅助开发工具</code>、<code>社区支持</code>、<code>商业应用</code>、<code>设计思想</code>几个维度进行比较，分析各个引擎框架的优缺点以及各自的适用场景，为日常项目中游戏开发提供有价值的参考资料。</p>
+</blockquote>
+<p><img src="http://7xt6po.com1.z0.glb.clouddn.com/blog/%E6%B8%B8%E6%88%8F%E5%BC%95%E6%93%8E.png" alt="分析对比"></p>
+<a id="more"></a>
+<h1 id="引擎体积"><a href="#引擎体积" class="headerlink" title="引擎体积"></a>引擎体积</h1><ul>
+<li>引擎比较</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>游戏引擎</th>
+<th>核心库(KB)</th>
+<th>核心库GZip(KB)</th>
+<th>骨骼动画引擎(KB)</th>
+<th>物理引擎(KB)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hilo (Standalone)</td>
+<td>65</td>
+<td>24</td>
+<td>66</td>
+<td>64（Chipmunk引擎）</td>
+</tr>
+<tr>
+<td>Hilo (AMD)</td>
+<td>67</td>
+<td>24</td>
+<td>66</td>
+<td>64</td>
+</tr>
+<tr>
+<td>Hilo (CMD)</td>
+<td>66</td>
+<td>24</td>
+<td>66</td>
+<td>64</td>
+</tr>
+<tr>
+<td>Egret</td>
+<td>300</td>
+<td>80</td>
+<td>66</td>
+<td>119 (P2引擎)</td>
+</tr>
+<tr>
+<td>Phaser</td>
+<td>348</td>
+<td>173</td>
+<td>无</td>
+<td>215 (Arcade引擎)</td>
+</tr>
+</tbody>
+</table>
+<p><img src="http://7xt6po.com1.z0.glb.clouddn.com/blog/diff.png" alt="体积比较"></p>
+<ul>
+<li>Hilo和Egret都基于开源2D骨骼动画解决方案 <a href="http://dragonbones.github.io/" target="_blank" rel="external"><code>DragonBones</code></a> 来实现骨骼动画。</li>
+<li>Phaser目前暂时没有内置的骨骼动画引擎，如有需要可引入开源骨骼动画框架，<a href="http://www.html5gamedevs.com/topic/6666-phaser-dragonbones/" target="_blank" rel="external">点击查看</a>。</li>
+</ul>
+<h1 id="功能特性"><a href="#功能特性" class="headerlink" title="功能特性"></a>功能特性</h1><ul>
+<li>功能特性对比表</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>特性\引擎</th>
+<th>Hilo</th>
+<th>Egret</th>
+<th>Phaser </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Canvas</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>WebGL</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes </td>
+</tr>
+<tr>
+<td>Flash渲染</td>
+<td>Yes</td>
+<td><code>No</code></td>
+<td><code>No</code></td>
+</tr>
+<tr>
+<td>DOM渲染</td>
+<td>Yes</td>
+<td><code>No</code></td>
+<td><code>No</code></td>
+</tr>
+<tr>
+<td>矢量绘图</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>3D渲染</td>
+<td><code>No</code></td>
+<td>Yes</td>
+<td><code>No</code></td>
+</tr>
+<tr>
+<td>preload资源预加载</td>
+<td>yes **</td>
+<td>yes<em>**</em></td>
+<td>yes<em>**</em></td>
+</tr>
+<tr>
+<td>audio/sound</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>device scale</td>
+<td><code>No</code></td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Button/Input/event</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Bitmap/text/纹理</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>group特性</td>
+<td><code>No</code></td>
+<td><code>No</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>camera相机特性</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>physics物理特性</td>
+<td>Yes <em>*</em></td>
+<td>Yes<em>**</em></td>
+<td>Yes<em>**</em></td>
+</tr>
+<tr>
+<td>Particle粒子特性</td>
+<td>Yes <em>*</em></td>
+<td><code>No</code></td>
+<td>Yes <em>**</em></td>
+</tr>
+<tr>
+<td>骨骼动画</td>
+<td>Yes <em>**</em></td>
+<td>Yes <em>**</em></td>
+<td>Yes <em>**</em></td>
+</tr>
+<tr>
+<td>Tween/Animation</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>UI组件库</td>
+<td><code>No</code></td>
+<td>Yes</td>
+<td><code>No</code></td>
+</tr>
+<tr>
+<td>native app</td>
+<td><code>No</code></td>
+<td>Yes</td>
+<td><code>No</code></td>
+</tr>
+<tr>
+<td>IDE工具</td>
+<td><code>No</code>未开源</td>
+<td>Yes</td>
+<td><code>No</code></td>
+</tr>
+<tr>
+<td>Plugin</td>
+<td>Yes **</td>
+<td>Yes <em>**</em></td>
+<td>Yes <em>**</em></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><p><strong>Hilo</strong> 是由阿里巴巴研发并开源的一个跨终端的互动小游戏解决方案，内核精简，功能全面。</p>
+<ul>
+<li>提供DOM，Canvas，Flash，WebGL等多种渲染方案。</li>
+<li>物理引擎支持——Chipmunk，支持自扩展物理实现；</li>
+<li>骨骼动画支持——<a href="http://dragonbones.github.io/" target="_blank" rel="external"><code>DragonBones</code></a>，同时内建骨骼动画系统——Tahiti（目前内部使用）</li>
+<li><p>集成 Hilo Audio, Hilo Preload 等游戏构建服务的综合解决方案以及动画纹理构建方案。</p>
+<p><img src="http://sm01.alicdn.com/L1/272/6837/static/dongxiao_topic/image/Hilo功能特性.png" alt="Hilo功能特性"></p>
+</li>
+</ul>
+</li>
+<li><p><strong><a href="http://edn.egret.com/cn/" target="_blank" rel="external">Egret</a></strong> 是一整套游戏开发的解决方案，包括游戏开发框架、开发辅助工具。</p>
+<ul>
+<li>基于<a href="http://www.typescriptlang.org/" target="_blank" rel="external">TypeScript</a>进行开发，支持Flash到Egret的高效转换</li>
+<li>跨平台支持，可打包为<code>HTML5</code>，以及<code>iOS</code> 和 <code>Android</code>、<code>Windows Phone</code>（貌似没啥必要）平台原生app，极大提高游戏性能。 <a href="http://edn.egret.com/cn/docs/page/649" target="_blank" rel="external">点击查看</a></li>
+<li>接入<a href="http://www.egret.com/products-runtime" target="_blank" rel="external">Egret Runtime</a>，可彻底解决HTML5游戏在WebView中的卡顿问题</li>
+<li>提供核心UI扩展库 <code>EUI</code>，<a href="http://edn.egret.com/cn/docs/page/518" target="_blank" rel="external">EUI</a>用 EXML 来开发应用界面，可基于已有组件进行组合或扩展</li>
+<li><p>EUI 组件库<br><img src="http://sedn.egret.com/560200b50f195.png" alt="EUI扩展库类图"></p>
+</li>
+<li><p>功能特性图<br>  <img src="http://sm01.alicdn.com/L1/272/6837/static/dongxiao_topic/image/Egret功能特性.png" alt="Egret功能特性"></p>
+</li>
+</ul>
+</li>
+<li><p><strong><a href="http://phaser.io/" target="_blank" rel="external">Phaser</a></strong> 是一款专门用于HTML5 2D游戏开发的开源框架，提供JavaScript和TypeScript双重支持，内置游戏对象的物理属性，采用<a href="http://www.pixijs.com/" target="_blank" rel="external">Pixi.js</a>渲染引擎以加快Canvas和WebGL渲染</p>
+<ul>
+<li>功能特性<br><img src="http://sm01.alicdn.com/L1/272/6837/static/dongxiao_topic/image/phaser功能特性.png" alt="Phaser功能特性"></li>
+</ul>
+</li>
+</ul>
+<h1 id="渲染性能"><a href="#渲染性能" class="headerlink" title="渲染性能"></a>渲染性能</h1><blockquote>
+<p>主要测试同时渲染大量位图时的性能表现，分别测试在渲染1000个位图对象时的动画实时帧数（FPS）</p>
+</blockquote>
+<ul>
+<li><a href="http://fms126.github.io/hilo-test/" target="_blank" rel="external">hilo-test</a></li>
+<li><a href="http://fms126.github.io/phaser-test/" target="_blank" rel="external">phaser-test</a></li>
+<li><a href="http://fms126.github.io/egret-test/" target="_blank" rel="external">egret-test</a></li>
+</ul>
+<h1 id="开发入门"><a href="#开发入门" class="headerlink" title="开发入门"></a>开发入门</h1><table>
+<thead>
+<tr>
+<th>引擎</th>
+<th>构建工具</th>
+<th>可扩展模块</th>
+<th>开发语言</th>
+<th>入门成本</th>
+<th>开发成本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hilo</td>
+<td>Gulp &amp;&amp; <a href="https://github.com/yeoman/yo" target="_blank" rel="external">yeoman</a></td>
+<td>standalone、AMD、CMD、Kissy、flashshim</td>
+<td>JavaScript</td>
+<td>中</td>
+<td>高</td>
+</tr>
+<tr>
+<td>Egret</td>
+<td>EgretWing&amp;命令行</td>
+<td>Game、Tween、WebSocket、p2、ParticleSystem</td>
+<td>TypeScript</td>
+<td>高</td>
+<td>中</td>
+</tr>
+<tr>
+<td>Phaser</td>
+<td>Grunt</td>
+<td>ninja、 p2、 particles、gamepad、 keyboard…</td>
+<td>JavaScript、TypeScript</td>
+<td>中</td>
+<td>中</td>
+</tr>
+</tbody>
+</table>
+<h1 id="辅助工具"><a href="#辅助工具" class="headerlink" title="辅助工具"></a>辅助工具</h1><ul>
+<li>Hilo<ul>
+<li>骨骼动画系统——Tahiti（目前内部使用）</li>
+</ul>
+</li>
+<li>Egret<ul>
+<li>可视化IDE —— <a href="http://www.egret.com/products/wing.html" target="_blank" rel="external">Egret Wing</a><br><img src="http://www.egret.com/img/products/wing/wanzheng.gif" alt="EgretWing"></li>
+<li>3D引擎 —— <a href="http://edn.egret.com/cn/docs/page/775" target="_blank" rel="external">Egret Engine 3D</a></li>
+<li>基于XML语法扩展的组件库方案 —— <a href="http://edn.egret.com/cn/docs/page/666" target="_blank" rel="external">EUI</a></li>
+<li>骨骼动画解决方案（编辑器、插件、基础库）—— <a href="http://edn.egret.com/cn/docs/page/364" target="_blank" rel="external">DragonBones</a><br><img src="http://sedn.egret.com/ueditor/20150727/55b5e611db7e2.png" alt="dragonbones"></li>
+<li>无需编程的免费游戏创作工具 —— <a href="http://edn.egret.com/cn/docs/page/476" target="_blank" rel="external">Lakeshore</a></li>
+<li>其它辅助工具——（<a href="http://edn.egret.com/cn/docs/page/236" target="_blank" rel="external">egret-iOS-support</a>、<a href="http://edn.egret.com/cn/docs/page/235" target="_blank" rel="external">Egret Android Support</a>、<a href="http://edn.egret.com/cn/docs/page/240" target="_blank" rel="external">Egret Inspector</a>、<a href="http://edn.egret.com/cn/docs/page/233" target="_blank" rel="external">TS Conversion</a>)</li>
+</ul>
+</li>
+<li>Phaser<ul>
+<li>在线代码调试编辑 —— <a href="http://phaser.io/sandbox/edit/1" target="_blank" rel="external">phaser sandbox</a></li>
+<li>API链式方法在线查询 —— <a href="http://phaser.io/learn/chains" target="_blank" rel="external">http://phaser.io/learn/chains</a></li>
+<li>第三方商业骨骼动画解决方案 <ul>
+<li><a href="http://creature.kestrelmoon.com/more_info_1.html" target="_blank" rel="external">creature</a></li>
+<li><a href="http://www.html5gamedevs.com/topic/13290-creature-advance-2d-skeletal-mesh-animation-tool-now-with-phasor-support/" target="_blank" rel="external">Advance 2D Skeletal + Mesh Animation Tool now with Phasor Support</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="社区支持"><a href="#社区支持" class="headerlink" title="社区支持"></a>社区支持</h1><table>
+<thead>
+<tr>
+<th>引擎</th>
+<th>开源</th>
+<th>文档支持</th>
+<th>示例</th>
+<th>API搜索</th>
+<th>社区支持</th>
+<th>第三方插件</th>
+<th>语言支持</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hilo</td>
+<td>部分开源</td>
+<td>中文文档</td>
+<td><a href="http://hiloteam.github.io/examples/index.html" target="_blank" rel="external">少量示例</a></td>
+<td>不支持</td>
+<td>github</td>
+<td>无</td>
+<td>中文</td>
+</tr>
+<tr>
+<td>Egret</td>
+<td>完全开源</td>
+<td>丰富的中文文档</td>
+<td><a href="http://edn.egret.com/cn/list/example/" target="_blank" rel="external">大量丰富的示例</a></td>
+<td>支持</td>
+<td>github&amp;<a href="http://bbs.egret.com/forum.php" target="_blank" rel="external">专业论坛社区</a></td>
+<td>开发平台支持，免费为主</td>
+<td>中文</td>
+</tr>
+<tr>
+<td>Phaser</td>
+<td>完全开源</td>
+<td>丰富的英文文档</td>
+<td><a href="http://phaser.io/examples" target="_blank" rel="external">大量丰富的示例</a></td>
+<td>支持</td>
+<td>github&amp;<a href="http://www.html5gamedevs.com/" target="_blank" rel="external">专业论坛社区</a></td>
+<td>收费的<a href="http://phaser.io/shop" target="_blank" rel="external">商业插件</a>为主</td>
+<td>英文</td>
+</tr>
+</tbody>
+</table>
+<h1 id="商业应用"><a href="#商业应用" class="headerlink" title="商业应用"></a>商业应用</h1><ul>
+<li><p>国内应用：</p>
+<p>  国内有人用了国内比较火的HTML5游戏平台新浪微博作为数据采样基础，判断游戏到底使用什么引擎制作，<a href="http://gold.xitu.io/entry/5710a800ebcb7d00559448a5" target="_blank" rel="external">点这里</a>。最终统计结果如下：<br><img src="http://7xt6po.com1.z0.glb.clouddn.com/blog/game-app.png" alt="game-app"></p>
+</li>
+<li><p>国外排行榜：<br><a href="https://html5gameengine.com/" target="_blank" rel="external">html5 game engine</a><br><img src="http://7xt6po.com1.z0.glb.clouddn.com/blog/h5-game.png" alt="h5 game"></p>
+</li>
+</ul>
+<h1 id="游戏开发通用模式"><a href="#游戏开发通用模式" class="headerlink" title="游戏开发通用模式"></a>游戏开发通用模式</h1><p><img src="http://sm01.alicdn.com/L1/272/6837/static/dongxiao_topic/image/HTML5游戏通用开发模式.png" alt="HTML5游戏通用开发模式"></p>
+<ul>
+<li><p>游戏舞台、对象容器、场景（game、stage）</p>
+<ul>
+<li>舞台场景是所有游戏对象的载体和容器</li>
+<li><p>Hilo.Stage 舞台</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> stage = <span class="keyword">new</span> Hilo.Stage(&#123;</div><div class="line"><span class="attr">renderType</span>:<span class="string">'canvas'</span>,</div><div class="line"><span class="attr">container</span>: containerElem,</div><div class="line"><span class="attr">width</span>: <span class="number">320</span>,</div><div class="line"><span class="attr">height</span>: <span class="number">480</span></div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+</li>
+<li><p>egret 游戏对象容器</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">this</span>.gameLayer = <span class="keyword">new</span> egret.DisplayObjectContainer();</div><div class="line"><span class="keyword">this</span>.addChild(<span class="keyword">this</span>.gameLayer);</div></pre></td></tr></table></figure>
+</li>
+<li><p>Phaser 游戏舞台对象</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 状态管理，详情参照 http://www.iphaser.cn/learn/stateManager</span></div><div class="line"><span class="keyword">var</span> states = &#123;</div><div class="line">    <span class="attr">preload</span>: <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;&#125;,</div><div class="line">    <span class="attr">create</span>: <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;&#125;,</div><div class="line">    <span class="attr">update</span>: <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;&#125;</div><div class="line">&#125;;</div><div class="line"><span class="keyword">var</span> game = <span class="keyword">new</span> Phaser.Game(gameWidth, gameHeight, Phaser.CANVAS, <span class="string">'wrapper'</span>, states , <span class="literal">true</span>);</div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>游戏可视化对象（Sprite、bitmap、text）</p>
+<ul>
+<li>具有独立功能的独立显示对象，包括位图对象、文本对象、矢量图形、可视化对象群组等</li>
+<li><p>hilo 可视对象(位图对象Bitmap)</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> bird = <span class="keyword">new</span> Hilo.Bitmap(&#123;</div><div class="line"><span class="attr">image</span>: <span class="string">'images/bird.png'</span></div><div class="line">&#125;).addTo(stage);</div></pre></td></tr></table></figure>
+</li>
+<li><p>egret 可视对象</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> bitmap:egret.Bitmap = <span class="keyword">new</span> egret.Bitmap();</div><div class="line">bitmap.texture = RES.getRes(<span class="string">"bgImage"</span>);</div><div class="line"><span class="keyword">this</span>.gameLayer.addChild(bitmap);</div></pre></td></tr></table></figure>
+</li>
+<li><p>phaser 可视对象</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">game.load.image(<span class="string">'pic'</span>, <span class="string">'assets/pics/acryl_bladerunner.png'</span>);</div><div class="line"><span class="keyword">var</span> image = game.add.image(<span class="number">100</span>, <span class="number">100</span>, <span class="string">'pic'</span>);</div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>游戏资源加载（preload、res）</p>
+<ul>
+<li>加载图片、json文件、音视频资源等</li>
+<li><p>hilo 预加载资源</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> queue = <span class="keyword">new</span> Hilo.LoadQueue();  </div><div class="line">queue.add(&#123;<span class="attr">id</span>:<span class="string">'bg'</span>, <span class="attr">src</span>:<span class="string">'images/bg.png'</span>&#125;);</div><div class="line">queue.on(<span class="string">'load'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">e</span>)</span>&#123;</div><div class="line"><span class="comment">//console.log('load:', e.detail);</span></div><div class="line">&#125;);</div><div class="line">queue.on(<span class="string">'error'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">e</span>)</span>&#123;</div><div class="line"><span class="comment">//console.log('error:', e.detail);</span></div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+</li>
+<li><p>egret 预加载资源</p>
+<ul>
+<li><p>资源配置json文件</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">   "name":"mc_png",</div><div class="line">   "type":"image",</div><div class="line">   "url":"assets/mc.png"</div><div class="line">&#125;,</div><div class="line">&#123;</div><div class="line">    "name":"big_json",</div><div class="line">    "type":"json",</div><div class="line">    "url":"assets/big.json"</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>资源加载解析器</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">RES.registerAnalyzer(type:image, <span class="attr">analyzerClass</span>:any);</div><div class="line"></div><div class="line"><span class="comment">// 同步获取缓存资源</span></div><div class="line"><span class="keyword">var</span> texture:egret.Texture = RES.getRes(<span class="string">"mc_png"</span>);</div><div class="line"></div><div class="line"><span class="comment">// 异步获取资源</span></div><div class="line">RES.getResAsync(<span class="string">"mc_png"</span>, <span class="function"><span class="keyword">function</span>(<span class="params">res</span>)</span>&#123;</div><div class="line"></div><div class="line">&#125;);</div><div class="line"></div><div class="line"><span class="comment">// 加载资源组，支持回调函数</span></div><div class="line">RES.addEventListener( RES.ResourceEvent.GROUP_COMPLETE, <span class="keyword">this</span>.onResourceLoadComplete, <span class="keyword">this</span> );</div><div class="line">RES.addEventListener( RES.ResourceEvent.GROUP_PROGRESS, <span class="keyword">this</span>.onResourceProgress, <span class="keyword">this</span> );</div><div class="line">RES.addEventListener( RES.ResourceEvent.GROUP_LOAD_ERROR, <span class="keyword">this</span>.onResourceLoadErr, <span class="keyword">this</span> );</div><div class="line">RES.loadGroup( <span class="string">"preload"</span> );</div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>Phaser 资源加载</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">preload</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    game.load.image(<span class="string">'mushroom'</span>, <span class="string">'assets/sprites/mushroom2.png'</span>);</div><div class="line">    game.load.audio(<span class="string">'boden'</span>, [<span class="string">'rock_4bit.mp3'</span>]);</div><div class="line">    game.load.json(<span class="string">'version'</span>, <span class="string">'http://phaser.io/version.json'</span>);</div><div class="line">&#125;</div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">create</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="keyword">var</span> test = game.add.sprite(<span class="number">200</span>, <span class="number">200</span>, <span class="string">'mushroom'</span>);</div><div class="line">    <span class="keyword">var</span> music = game.sound.play(<span class="string">'boden'</span>);</div><div class="line">    <span class="keyword">var</span> phaserJSON = game.cache.getJSON(<span class="string">'version'</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p>动画特性支持（tween、animation）</p>
+<ul>
+<li><p>Hilo 动画 Tween</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//循环移动地面</span></div><div class="line">Hilo.Tween.to(<span class="keyword">this</span>.ground, &#123;<span class="attr">x</span>:<span class="number">-60</span>&#125;, &#123;<span class="attr">duration</span>:<span class="number">300</span>, <span class="attr">loop</span>:<span class="literal">true</span>&#125;);</div></pre></td></tr></table></figure>
+</li>
+<li><p>egret动画 Tween</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">egret.Tween.get(<span class="keyword">this</span>.jian_png, &#123; <span class="attr">loop</span>: isloop &#125;).to(obj, duration, ease).wait(waited);</div></pre></td></tr></table></figure>
+</li>
+<li><p>phaser动画 Tween</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> bounce=game.add.tween(ball);</div><div class="line">bounce.to(&#123; <span class="attr">y</span>: game.world.height-ball.height &#125;, <span class="number">1000</span> + <span class="built_in">Math</span>.random() * <span class="number">3000</span>,Phaser.Easing.Bounce.In);</div><div class="line">bounce.onComplete.add(startBounceTween, <span class="keyword">this</span>);</div><div class="line">bounce.start();</div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>用户交互处理（input、event）</p>
+<ul>
+<li>提供一套事件机制，支持用户通过各种方式的输入，包括鼠标、键盘、触摸、重力感应等</li>
+<li><p>hilo 事件交互</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">stage.enableDOMEvent(Hilo.event.POINTER_START, <span class="literal">true</span>);</div><div class="line">sprite.on(Hilo.event.POINTER_START, <span class="function"><span class="keyword">function</span>(<span class="params">e</span>)</span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(e.eventTarget, e.stageX, e.stageY);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+</li>
+<li><p>egret事件交互</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Main</span> <span class="keyword">extends</span> <span class="title">egret</span>.<span class="title">DisplayObjectContainer</span> </span>&#123;       </div><div class="line">    public <span class="keyword">constructor</span>() &#123;</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">    <span class="keyword">this</span>.addEventListener(egret.Event.ADDED_TO_STAGE,<span class="keyword">this</span>.onAddToStage, <span class="keyword">this</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    private onAddToStage(event:egret.Event) &#123;</div><div class="line">        <span class="comment">// 触摸事件</span></div><div class="line">        <span class="keyword">var</span> spr1:egret.Sprite = <span class="keyword">new</span> egret.Sprite();</div><div class="line">        spr1.addEventListener( egret.TouchEvent.TOUCH_TAP, <span class="keyword">this</span>.onTouch, <span class="keyword">this</span> );</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>phaser事件交互</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"> <span class="comment">// 键盘事件</span></div><div class="line"><span class="keyword">if</span> (game.input.keyboard.isDown(Phaser.Keyboard.LEFT))</div><div class="line">&#123;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>屏幕适配（scale、rotate）</p>
+<ul>
+<li>提供舞台宽高和屏幕尺寸之间的适配模式（showAll、exactFit等）</li>
+<li><p>egret屏幕适配<br><a href="http://edn.egret.com/cn/apidoc/index/name/egret.StageScaleMode" target="_blank" rel="external">点击查看API</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//保持原始宽高比缩放应用程序内容，缩放后应用程序内容的较宽方向填满播放器视口，另一个方向的两侧可能会不够宽而留有黑边。</span></div><div class="line"><span class="keyword">this</span>.stage.scaleMode = egret.StageScaleMode.SHOW_ALL;</div><div class="line"><span class="keyword">this</span>.stage.orientation = egret.OrientationMode.AUTO;</div></pre></td></tr></table></figure>
+</li>
+<li><p>phaser 屏幕适配</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">   <span class="comment">// 游戏居中</span></div><div class="line">game.scale.pageAlignHorizontally = <span class="literal">true</span>;</div><div class="line">game.scale.pageAlignVertically = <span class="literal">true</span>;</div><div class="line"><span class="comment">// 适应父元素的大小，但会保持游戏的宽高比例</span></div><div class="line">game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>音频、视频处理（Video、Sound）</p>
+<ul>
+<li>提供音频视频媒体资源的播放处理</li>
+<li><p>Egret音视频</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">  <span class="keyword">var</span> sound:egret.Sound = <span class="keyword">new</span> egret.Sound();</div><div class="line">  sound.addEventListener(egret.Event.COMPLETE, <span class="function"><span class="keyword">function</span> <span class="title">loadOver</span>(<span class="params">event:egret.Event</span>) </span>&#123;</div><div class="line">    sound.play();</div><div class="line">&#125;, <span class="keyword">this</span>);</div><div class="line"></div><div class="line"><span class="keyword">this</span>.video = <span class="keyword">new</span> egret.Video();</div><div class="line"><span class="keyword">this</span>.video.load(<span class="string">"http://media.w3.org/2010/05/sintel/trailer.mp4"</span>);</div><div class="line"><span class="comment">//监听视频加载完成</span></div><div class="line"><span class="keyword">this</span>.video.once(egret.Event.COMPLETE,<span class="keyword">this</span>.onLoad,<span class="keyword">this</span>);</div></pre></td></tr></table></figure>
+</li>
+<li><p>phaser音视频</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//预加载音频资源</span></div><div class="line">game.load.audio(<span class="string">'sfx'</span>, <span class="string">'assets/audio/SoundEffects/fx_mixdown.ogg'</span>);</div><div class="line"></div><div class="line"><span class="comment">//加载完毕在回调函数(creat函数)中初始化</span></div><div class="line"><span class="keyword">var</span> fx = game.add.audio(<span class="string">'sfx'</span>); </div><div class="line">fx.play();</div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>游戏场景刷新、定时器（update、ticker）</p>
+<ul>
+<li>控制游戏舞台按照一定帧率（60FPS）来不断刷新</li>
+<li>提供定时器对象 time ticker</li>
+<li><p>hilo 定时器</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//舞台Stage上的物体的运动等变化，都是通过一个定时器Ticker不断地调用Stage.tick()方法来实现刷新的。</span></div><div class="line"><span class="keyword">var</span> ticker = <span class="keyword">new</span> Hilo.Ticker(<span class="number">60</span>);</div><div class="line">ticker.addTick(stage);</div><div class="line">ticker.start();</div></pre></td></tr></table></figure>
+</li>
+<li><p>egret计时器</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"> <span class="comment">//创建一个计时器对象</span></div><div class="line"><span class="keyword">var</span> timer:egret.Timer = <span class="keyword">new</span> egret.Timer(<span class="number">500</span>,<span class="number">5</span>);</div><div class="line"><span class="comment">//注册事件侦听器</span></div><div class="line">timer.addEventListener(egret.TimerEvent.TIMER,<span class="keyword">this</span>.timerFunc,<span class="keyword">this</span>);</div><div class="line"> timer.addEventListener(egret.TimerEvent.TIMER_COMPLETE,<span class="keyword">this</span>.timerComFunc,<span class="keyword">this</span>);</div><div class="line"><span class="comment">//开始计时</span></div><div class="line">timer.start();</div></pre></td></tr></table></figure>
+</li>
+<li><p>phaser计时器</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"> game.time.events.loop(Phaser.Timer.SECOND, updateCounter, <span class="keyword">this</span>);</div><div class="line"> </div><div class="line"> <span class="function"><span class="keyword">function</span> <span class="title">updateCounter</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    counter++;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p>物理特性、粒子特性支持</p>
+<ul>
+<li>支持碰撞检测等物理特性</li>
+<li><p>egret 物理特性</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"> <span class="comment">//创建world</span></div><div class="line"><span class="keyword">var</span> world:p2.World = <span class="keyword">new</span> p2.World();</div><div class="line">world.sleepMode = p2.World.BODY_SLEEPING;      </div><div class="line">......     </div><div class="line">var boxBody:p2.Body = world.bodies[i];</div><div class="line"><span class="keyword">var</span> box:egret.DisplayObject = boxBody.displays[<span class="number">0</span>];</div><div class="line">  </div><div class="line"><span class="comment">//添加方形刚体</span></div><div class="line"><span class="keyword">var</span> boxShape:p2.Shape = <span class="keyword">new</span> p2.Rectangle(<span class="number">2</span>, <span class="number">1</span>);</div><div class="line"><span class="keyword">var</span> boxBody:p2.Body = <span class="keyword">new</span> p2.Body(&#123; <span class="attr">mass</span>: <span class="number">1</span>, <span class="attr">position</span>: [positionX, positionY], <span class="attr">angularVelocity</span>: <span class="number">1</span>&#125;);</div><div class="line">boxBody.addShape(boxShape);</div><div class="line">world.addBody(boxBody);</div></pre></td></tr></table></figure>
+</li>
+<li><p>phaser 物理特性</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> image = game.add.sprite(<span class="number">0</span>, <span class="number">0</span>, <span class="string">'flyer'</span>);</div><div class="line">game.physics.enable(image, Phaser.Physics.ARCADE);</div><div class="line"><span class="comment">// 设置对象速度</span></div><div class="line">image.body.velocity.setTo(<span class="number">200</span>,<span class="number">200</span>);</div><div class="line"><span class="comment">// 设置是否检测碰撞</span></div><div class="line">image.body.collideWorldBounds = <span class="literal">true</span>;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>骨骼动画支持</p>
+<ul>
+<li>使用一套图片资源，组合创造骨骼动画</li>
+<li><p>hilo 骨骼动画 <a href="http://g.alicdn.com/tmapp/hilodemos/3.0.7/mv1111/index.html" target="_blank" rel="external">点击查看</a></p>
+<p><img src="http://7xt6po.com2.z0.glb.clouddn.com/blog/hilo-d.gif" alt="骨骼动画示例"></p>
+</li>
+<li><p>Egret 骨骼动画<a href="http://edn.egret.com/cn/article/index/id/33" target="_blank" rel="external">点击查看</a></p>
+<p><img src="http://7xt6po.com2.z0.glb.clouddn.com/blog/egret%E9%AA%A8%E9%AA%BC%E5%8A%A8%E7%94%BB.png" alt="手机访问"></p>
+</li>
+<li><p>Phaser骨骼动画 <a href="http://phaser.io/examples/v2/animation/creature-dragon" target="_blank" rel="external">点击查看</a></p>
+<p><img src="http://7xt6po.com1.z0.glb.clouddn.com/blog/phaser.gif" alt="phaser gif"></p>
+</li>
+</ul>
+</li>
+<li><p>多重渲染模式支持（canvas、webgl、flash）</p>
+<ul>
+<li>针对不同的终端以及浏览器环境，自动选择渲染模式，屏蔽差异</li>
+<li><p>egret 支持canvas和WebGL渲染</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">egret.runEgret(&#123;<span class="attr">renderMode</span>:<span class="string">"canvas"</span>&#125;);</div><div class="line"></div><div class="line">egret.runEgret(&#123;<span class="attr">renderMode</span>:<span class="string">"webgl"</span>&#125;);</div></pre></td></tr></table></figure>
+</li>
+<li><p>phaser 支持自动选择渲染模式（WebGL&gt;Canvas）或者手动选择</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> states = &#123;&#125;;</div><div class="line"><span class="comment">//让游戏引擎根据浏览器特性自动选择</span></div><div class="line"><span class="keyword">var</span> game = <span class="keyword">new</span> Phaser.Game(gameWidth, gameHeight, Phaser.AUTO, <span class="string">'wrapper'</span>, states , <span class="literal">true</span>);</div><div class="line"></div><div class="line"><span class="keyword">var</span> game = <span class="keyword">new</span> Phaser.Game(gameWidth, gameHeight, Phaser.CANVAS, <span class="string">'wrapper'</span>, states , <span class="literal">true</span>);</div><div class="line">    </div><div class="line"><span class="keyword">var</span> game = <span class="keyword">new</span> Phaser.Game(gameWidth, gameHeight, Phaser.WEBGL, <span class="string">'wrapper'</span>, states , <span class="literal">true</span>);</div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p>可扩展模块</p>
+<ul>
+<li>支持模块化配置，可选择引入需要的功能模块，减小基础库体积</li>
+<li>支持第三方插件无缝接入</li>
+<li><p><a href="http://edn.egret.com/cn/docs/page/172" target="_blank" rel="external">Egret第三方库</a></p>
+<ul>
+<li>一些非核心内容(比如 MovieClip)都移到了扩展模块中，通过配置文件 <code>egretProperties.json</code>指定扩展模块</li>
+<li><p>Egret官方库按照模块呈现，避免加载不需要的模块，减少最终代码的体积</p>
+  <figure class="highlight vim"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">egret 必备的核心库</div><div class="line">game 制作游戏会用到的类库，比如 MovieClip，URLLoader 等</div><div class="line"><span class="keyword">res</span> 资源加载库，所有涉及资源载入的工作，都可以通过这个模块来完成</div><div class="line">tween 动画缓动类</div><div class="line">dragonbones 龙骨动画库，用来制作一些复杂的动画效果</div><div class="line">socket 用来通讯的 WebSocket 库</div><div class="line"><span class="keyword">gui</span> 老版本的 UI 库</div><div class="line">eui 新增的 UI 库，使用起来更加的方便</div></pre></td></tr></table></figure>
+</li>
+<li><p>标准第三方库可以是标准的 ts 库，也可是你在网上下载现成的 js 库经过扩展来使用 <a href="http://edn.egret.com/cn/docs/page/172" target="_blank" rel="external">详情请看</a></p>
+</li>
+</ul>
+</li>
+<li><a href="http://phaser.io/shop" target="_blank" rel="external">Phaser第三方插件</a><ul>
+<li>主要为商业收费插件，功能强大，提供完善的文档和示例，例如：<a href="http://phaser.io/examples/v2/category/box2d" target="_blank" rel="external">Box2D物理引擎插件</a></li>
+<li>基于Phaser的plugin机制来使用第三方插件，<a href="http://phaser.io/shop/plugins" target="_blank" rel="external">插件参照</a>   </li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ul>
+<li><a href="http://www.atatech.org/articles/50174" target="_blank" rel="external">阿里自主研发的互动游戏引擎Hilo开源啦</a></li>
+<li><a href="http://www.atatech.org/articles/15940" target="_blank" rel="external">手把手教你用Hilo开发一个小游戏</a></li>
+<li><a href="http://hiloteam.github.io/index.html" target="_blank" rel="external">Hilo官方网站</a></li>
+<li><a href="http://edn.egret.com/cn/docs/page/579" target="_blank" rel="external">Egret Engine</a></li>
+<li><a href="http://edn.egret.com/cn/apidoc" target="_blank" rel="external">Egret官方API</a></li>
+<li><a href="http://edn.egret.com/cn/list/example/" target="_blank" rel="external">Egret官方示例</a></li>
+<li><a href="http://phaser.io/" target="_blank" rel="external">Phaser</a></li>
+<li><a href="http://phaser.io/examples" target="_blank" rel="external">Phaser官方示例</a></li>
+<li><a href="http://phaser.io/tutorials/making-your-first-phaser-game" target="_blank" rel="external">Phaser官方入门教程</a></li>
+<li><a href="http://phaser.io/docs" target="_blank" rel="external">Phaser官方API</a></li>
+<li><a href="http://bbs.9ria.com/forum.php?mod=viewthread&amp;tid=404929" target="_blank" rel="external">Phaser新手教程</a></li>
+<li><a href="http://www.ipastimes.com/category/Phaser/" target="_blank" rel="external">Phaser游戏开发教程</a></li>
+<li><a href="https://stonetingxin.gitbooks.io/phaser/content/introudce/setupaproject.html" target="_blank" rel="external">开始一个Phaser教程</a></li>
+<li><a href="http://www.iphaser.cn/learn/stateManager" target="_blank" rel="external">详解Phaser游戏框架状态管理state</a></li>
+<li><a href="http://www.cnblogs.com/2050/p/3790279.html" target="_blank" rel="external">用Phaser来制作一个HTML5游戏</a></li>
+<li><a href="http://www.html5gamedevs.com/topic/13290-creature-advance-2d-skeletal-mesh-animation-tool-now-with-phasor-support/" target="_blank" rel="external">Creature - Advance 2D Skeletal + Mesh Animation Tool now with Phasor Support</a></li>
+<li><a href="http://www.kestrelmoon.com/creaturedocs/Game_Engine_Runtimes_And_Integration/Phaser_Runtimes%20.html" target="_blank" rel="external">Phaser Runtimes</a></li>
+<li><a href="http://www.typescriptlang.org/" target="_blank" rel="external">TypeScript官方</a></li>
+<li><a href="https://zhongsp.gitbooks.io/typescript-handbook/content/" target="_blank" rel="external">TypeScript中文手册</a></li>
+</ul>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/2016/04/28/github-gitlab-ssh/" data-toggle="tooltip" data-placement="top" title="创建github和gitlab帐号ssh key">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#html5" title="html5">html5</a>
+                        
+                          <a class="tag" href="/tags/#游戏" title="游戏">游戏</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="http://huangxuan.me" target="_blank">Hux Blog</a></li>
+                    
+                </ul>
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "fengmiaosen";
+    var disqus_identifier = "http://fengmiaosen.github.io/2016/04/26/game-diff-study/";
+    var disqus_url = "http://fengmiaosen.github.io/2016/04/26/game-diff-study/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+                    <li>
+                        <a target="_blank" href="https://www.zhihu.com/people/fengmiaosen">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa  fa-stack-1x fa-inverse">知</i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+                    <li>
+                        <a target="_blank" href="http://weibo.com/fms86">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-weibo fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/fengmiaosen">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 冯淼森的博客 2017 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="/js/bootstrap.min.js"></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("http://fengmiaosen.github.io/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-76984426-1 ';
+    var _gaDomain = 'fengmiaosen';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+<script>
+    // dynamic User by Hux
+    var _baId = '4cc1f2d8f3067386cc5cdb626a202900';
+
+    // Originial
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?" + _baId;
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="http://fengmiaosen.github.io/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

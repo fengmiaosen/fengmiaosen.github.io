@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          webpack之plugin内部运行机制 - 冯淼森的博客
+        
+    </title>
+
+    <link rel="canonical" href="http://fengmiaosen.github.io/2017/03/21/webpack-core-code/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Pygments Highlight CSS -->
+    <link rel="stylesheet" href="/css/highlight.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">冯淼森的博客</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archives/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="http://fengmiaosen.github.io/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('/img/nanyuan.jpg')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#javascript" title="javascript">javascript</a>
+                        
+                          <a class="tag" href="/tags/#webpack" title="webpack">webpack</a>
+                        
+                    </div>
+                    <h1>webpack之plugin内部运行机制</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by fengmiaosen on
+                        2017-03-21
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p><a href="https://webpack.js.org/" target="_blank" rel="external">webpack</a>作为当前最为流行的模块打包工具，几乎所有的主流前端开发框架（React、Vue等）都会将其作为默认的模块加载和打包工具。通过简单的配置项，使用各种相关的loader和plugin，我们就可以实现自动的模块依赖分析并打包，从而大大降低了前端项目的开发复杂度，明显提高了前端项目的开发效率。</p>
+<p>其中，<a href="https://webpack.js.org/plugins/" target="_blank" rel="external">plugin</a>是webpack核心支柱功能，通过plugin（插件）webpack可以实现loader所不能完成的复杂功能，使用plugin丰富的自定义API以及生命周期事件，可以控制webpack编译流程的每个环节，实现对webpack的自定义功能扩展。</p>
+<a id="more"></a>
+<h1 id="webpack基础概念"><a href="#webpack基础概念" class="headerlink" title="webpack基础概念"></a>webpack基础概念</h1><h2 id="entry"><a href="#entry" class="headerlink" title="entry"></a>entry</h2><p><code>entry</code>表示webpack编译的入口文件，通常由html通过script标签引入。</p>
+<p>entry的配置参见<a href="https://webpack.js.org/concepts/entry-points/" target="_blank" rel="external">官方文档说明</a>。</p>
+<h2 id="loader"><a href="#loader" class="headerlink" title="loader"></a>loader</h2><p><code>loader</code> 用于对模块的源代码进行转换。其类似于其他构建工具中“任务(task)”，并提供了处理前端构建步骤的强大方法。loader 可以将文件从不同的语言（如 TypeScript）转换为 JavaScript，或将内联图像转换为 data URL，或者将CSS文件、markdown等非js文件转换为js文件并<code>require</code>进来！</p>
+<h3 id="loader特性"><a href="#loader特性" class="headerlink" title="loader特性"></a>loader特性</h3><p><img src="http://7xt6po.com1.z0.glb.clouddn.com/loader特性-1.png" alt="loader特性"></p>
+<h3 id="loader使用方法"><a href="#loader使用方法" class="headerlink" title="loader使用方法"></a>loader使用方法</h3><ul>
+<li>webpack.config.js</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">module</span>.exports = &#123;</div><div class="line">  <span class="attr">module</span>: &#123;</div><div class="line">    <span class="attr">rules</span>: [</div><div class="line">      &#123;<span class="attr">test</span>: <span class="regexp">/\.css$/</span>, <span class="attr">use</span>: <span class="string">'css-loader'</span>&#125;,</div><div class="line">      &#123;<span class="attr">test</span>: <span class="regexp">/\.ts$/</span>, <span class="attr">use</span>: <span class="string">'ts-loader'</span>&#125;</div><div class="line">    ]</div><div class="line">  &#125;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<ul>
+<li><code>require</code> 语句中使用</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">require</span>(<span class="string">'style-loader!css-loader?modules!./styles.css'</span>);</div></pre></td></tr></table></figure>
+<h2 id="module"><a href="#module" class="headerlink" title="module"></a>module</h2><p><code>Module</code>是webpack的中的核心实体，要加载的一切和所有的依赖都是Module，总之一切都是Module。</p>
+<ul>
+<li>webpack支持的模块类型：<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import" target="_blank" rel="external"> ES2015模块</a>，使用<code>import</code>来加载</li>
+<li><a href="http://www.commonjs.org/specs/modules/1.0/" target="_blank" rel="external">CommonJS模块</a>，使用 <code>require()</code>加载。例如：Node.js模块</li>
+<li><a href="https://github.com/amdjs/amdjs-api/blob/master/AMD.md" target="_blank" rel="external">AMD模块</a>，使用<code>require</code> 加载。例如：require.js支持的异步加载模块</li>
+<li>css/sass/less 模块文件</li>
+<li>image等其它非js模块文件</li>
+</ul>
+</li>
+</ul>
+<p>webpack 通过 <code>loader</code> 可以支持各种语言和预处理器编写模块。loader 描述了webpack 如何处理非js模块，可将这些非js模块进行转换，然后可以通过普通的js模块加载方式来使用。</p>
+<h2 id="chunk"><a href="#chunk" class="headerlink" title="chunk"></a>chunk</h2><p><code>chunk</code> 是webpack使用<a href="https://webpack.js.org/guides/code-splitting/" target="_blank" rel="external">code splitting</a>后的产物，也就是按需加载的分块，装载了不同的 <code>module</code>。</p>
+<h3 id="module-和-chunk-的关系图："><a href="#module-和-chunk-的关系图：" class="headerlink" title="module 和 chunk 的关系图："></a>module 和 chunk 的关系图：</h3><p><img src="http://7xt6po.com1.z0.glb.clouddn.com/module_chunk.jpg" alt="module_chunk"></p>
+<h3 id="webpack将chunk分为三种类型"><a href="#webpack将chunk分为三种类型" class="headerlink" title="webpack将chunk分为三种类型"></a>webpack将chunk分为三种类型</h3><ul>
+<li><p>entry chunk<br> 入口代码块包含了 webpack 运行时需要的一些函数，如 <code>webpackJsonp</code>, <code>__webpack_require__</code> 等以及依赖的一系列模块</p>
+</li>
+<li><p>normal chunk<br> 普通代码块没有包含运行时需要的代码，主要指代那些应用运行时<code>动态加载</code>的模块，其结构有加载方式决定，如基于异步的方式可能会包含 <code>webpackJsonp</code> 的调用。</p>
+</li>
+<li><p>initial chunk<br><code>initial chunk</code>本质上还是<code>normal chunk</code>，不过其会在应用初始化时完成加载，往往这个类型的chunk由<code>CommonsChunkPlugin</code>生成。<br><del>与入口代码块对应的一个概念是<code>入口模块（</code>module 0），如果入口代码块中包含了入口模块 webpack 会立即执行这个模块，否则会等待包含入口模块的代码块，包含入口模块的代码块其实就是<code>initial chunk</code>。</del></p>
+</li>
+</ul>
+<h3 id="code-splitting"><a href="#code-splitting" class="headerlink" title="code splitting"></a>code splitting</h3><p>利用webpack提供的code splitting功能可生成不同类型的chunk，具体请参照另外一篇文章<a href="https://fengmiaosen.github.io/2017/01/08/webpack-react-lazy-load/">《基于webpack实现react组件的按需加载》</a></p>
+<h1 id="如何编写一个webpack-plugin"><a href="#如何编写一个webpack-plugin" class="headerlink" title="如何编写一个webpack plugin"></a>如何编写一个webpack plugin</h1><h2 id="plugin创建"><a href="#plugin创建" class="headerlink" title="plugin创建"></a>plugin创建</h2><p>plugin是一个具有 <code>apply</code>方法的 js对象。 apply方法会被 webpack的 <code>compiler</code>（编译器）对象调用，并且 <code>compiler</code> 对象可在整个 <code>compilation</code>（编译）生命周期内访问。</p>
+<p>webpack插件的组成：</p>
+<ul>
+<li>一个JavaScript<code>函数</code>或者<code>class</code>（ES6语法）。</li>
+<li>在它的原型上定义一个<code>apply</code>方法。</li>
+<li>指定挂载的webpack<code>事件</code>钩子。</li>
+<li>处理webpack内部实例的特定数据。</li>
+<li>功能完成后调用webpack提供的<code>回调</code>。</li>
+</ul>
+<p>这里以我们常用的 <code>UglifyJsPlugin</code> 为分析示例。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">UglifyJsPlugin</span> </span>&#123;</div><div class="line"></div><div class="line">	apply(compiler) &#123;</div><div class="line">		<span class="keyword">const</span> options = <span class="keyword">this</span>.options;</div><div class="line">		options.test = options.test || <span class="regexp">/\.js($|\?)/i</span>;</div><div class="line">		</div><div class="line">		......</div><div class="line">		</div><div class="line">		<span class="comment">//绑定compilation事件</span></div><div class="line">		compiler.plugin(<span class="string">"compilation"</span>, (compilation) =&gt; &#123;</div><div class="line">			<span class="keyword">if</span>(options.sourceMap) &#123;</div><div class="line">				compilation.plugin(<span class="string">"build-module"</span>, (<span class="built_in">module</span>) =&gt; &#123;</div><div class="line">					<span class="comment">// to get detailed location info about errors</span></div><div class="line">					<span class="built_in">module</span>.useSourceMap = <span class="literal">true</span>;</div><div class="line">				&#125;);</div><div class="line">			&#125;</div><div class="line">			<span class="comment">//绑定optimize-chunk-assets事件</span></div><div class="line">			compilation.plugin(<span class="string">"optimize-chunk-assets"</span>, (chunks, callback) =&gt; &#123;</div><div class="line">				<span class="keyword">const</span> files = [];</div><div class="line">				chunks.forEach(<span class="function">(<span class="params">chunk</span>) =&gt;</span> files.push.apply(files, chunk.files));</div><div class="line">            </div><div class="line">            ......</div><div class="line">            </div><div class="line">				callback();</div><div class="line">			&#125;);</div><div class="line">		&#125;);</div><div class="line">	&#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="built_in">module</span>.exports = UglifyJsPlugin;</div></pre></td></tr></table></figure>
+<h2 id="plugin用法"><a href="#plugin用法" class="headerlink" title="plugin用法"></a>plugin用法</h2><p>由于plugin可以携带参数/选项，你必须在wepback配置中，向plugins属性传入 new实例。这里介绍两种常用的使用plugin的方式。</p>
+<h3 id="webpack-config-js"><a href="#webpack-config-js" class="headerlink" title="webpack.config.js"></a>webpack.config.js</h3><figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> HtmlWebpackPlugin = <span class="built_in">require</span>(<span class="string">'html-webpack-plugin'</span>);</div><div class="line"><span class="keyword">const</span> webpack = <span class="built_in">require</span>(<span class="string">'webpack'</span>);</div><div class="line"></div><div class="line"><span class="built_in">module</span>.exports = &#123;</div><div class="line">  </div><div class="line">  <span class="attr">module</span>: &#123;</div><div class="line">    <span class="attr">loaders</span>: [</div><div class="line">      &#123;</div><div class="line">        <span class="attr">test</span>: <span class="regexp">/\.(js|jsx)$/</span>,</div><div class="line">        <span class="attr">loader</span>: <span class="string">'babel-loader'</span></div><div class="line">      &#125;</div><div class="line">    ]</div><div class="line">  &#125;,</div><div class="line">  <span class="attr">plugins</span>: [</div><div class="line">    <span class="keyword">new</span> webpack.optimize.UglifyJsPlugin(), <span class="comment">//访问内置的插件</span></div><div class="line">    <span class="keyword">new</span> HtmlWebpackPlugin(&#123;<span class="attr">template</span>: <span class="string">'./src/index.html'</span>&#125;) <span class="comment">//访问第三方插件</span></div><div class="line">  ]</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<h3 id="Node-js"><a href="#Node-js" class="headerlink" title="Node.js"></a>Node.js</h3><blockquote>
+<p>目前webpack官方强烈建议在配置文件中使用plugins属性配置项来使用各种plugin，而在Node.js中通过<code>compiler.apply</code>来使用plugin这种方式并不推荐。</p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> webpack = <span class="built_in">require</span>(<span class="string">'webpack'</span>); <span class="comment">//运行时(runtime)访问 webpack</span></div><div class="line"><span class="keyword">const</span> configuration = <span class="built_in">require</span>(<span class="string">'./webpack.config.js'</span>);</div><div class="line"></div><div class="line"><span class="keyword">let</span> compiler = webpack(configuration);</div><div class="line">compiler.apply(<span class="keyword">new</span> webpack.optimize.UglifyJsPlugin());</div><div class="line"></div><div class="line">compiler.run(<span class="function"><span class="keyword">function</span>(<span class="params">err, stats</span>) </span>&#123;</div><div class="line">  <span class="comment">// ...</span></div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<h1 id="webpack整体运行流程图"><a href="#webpack整体运行流程图" class="headerlink" title="webpack整体运行流程图"></a>webpack整体运行流程图</h1><blockquote>
+<p>TODO</p>
+</blockquote>
+<p><img src="http://7xt6po.com1.z0.glb.clouddn.com/webpack整体流程.png" alt="webpack整体流程"></p>
+<h1 id="Tapable"><a href="#Tapable" class="headerlink" title="Tapable"></a>Tapable</h1><p>webpack整体是一个插件架构，所有的功能都以插件的方式集成在构建流程中，通过发布订阅事件来触发各个插件执行。webpack核心使用<a href="https://github.com/webpack/tapable" target="_blank" rel="external">Tapable</a> 来实现插件(plugins)的binding（绑定）和applying（应用）。</p>
+<h2 id="tapable介绍"><a href="#tapable介绍" class="headerlink" title="tapable介绍"></a>tapable介绍</h2><p>tapable是webpack官方开发维护的一个小型库,能够让我们为javascript模块添加并应用插件。 它可以被其它模块继承或混合。它类似于NodeJS的 <code>EventEmitter</code> 类,专注于<code>自定义事件</code>的<code>发射</code>和<code>操作</code>。 除此之外, Tapable 允许你通过回调函数的参数访问事件的生产者。</p>
+<h2 id="tapable核心函数"><a href="#tapable核心函数" class="headerlink" title="tapable核心函数"></a>tapable核心函数</h2><p><img src="http://7xt6po.com1.z0.glb.clouddn.com/Tapable.png" alt="Tapable"></p>
+<h1 id="compiler-编译器-和compilation-编译"><a href="#compiler-编译器-和compilation-编译" class="headerlink" title="compiler(编译器)和compilation(编译)"></a>compiler(编译器)和compilation(编译)</h1><p>在webpack插件开发中最重要的两个核心概念就是 <code>compiler</code> 和 <code>compilation</code> 。理解他们是扩展webpack功能的关键。</p>
+<h2 id="compiler"><a href="#compiler" class="headerlink" title="compiler"></a>compiler</h2><p>webpack官方对<a href="https://webpack.js.org/development/how-to-write-a-plugin/#compiler-and-compilation" target="_blank" rel="external">compiler</a>的解释如下：</p>
+<blockquote>
+<p>The compiler object represents the fully configured webpack environment. This object is built once upon starting webpack, and is configured with all operational settings including options, loaders, and plugins. When applying a plugin to the webpack environment, the plugin will receive a reference to this compiler. Use the compiler to access the main webpack environment</p>
+</blockquote>
+<p>compiler对象代表的是配置完备的Webpack环境。 compiler对象只在Webpack启动时构建一次，由Webpack组合所有的配置项构建生成。</p>
+<h3 id="功能核心"><a href="#功能核心" class="headerlink" title="功能核心"></a>功能核心</h3><p><code>Compiler</code> 继承自前面我们介绍的<code>Tapable</code>类，其混合了 Tapable 类以吸收其功能来注册和调用自身的插件。 大多数面向用户的插件，都是首先在 Compiler 上注册的。 </p>
+<p><img src="http://7xt6po.com1.z0.glb.clouddn.com/Compiler核心-1.png" alt="Compiler核心"></p>
+<h3 id="compiler事件钩子（Event-Hooks）"><a href="#compiler事件钩子（Event-Hooks）" class="headerlink" title="compiler事件钩子（Event Hooks）"></a>compiler事件钩子（Event Hooks）</h3><p>webpack官方列出了Compiler的所有事件钩子，<a href="https://webpack.js.org/api/plugins/compiler/#event-hooks" target="_blank" rel="external">点击查看</a></p>
+<p>我们这里只介绍一些关键性的事件，大致按照webpack流程的执行顺序：</p>
+<p><img src="http://7xt6po.com1.z0.glb.clouddn.com/webpack关键事件-1.png" alt="webpack关键事件"></p>
+<h3 id="compiler源码"><a href="#compiler源码" class="headerlink" title="compiler源码"></a>compiler源码</h3><ul>
+<li><a href="https://github.com/webpack/webpack/blob/master/lib/Compiler.js" target="_blank" rel="external">点击查看</a></li>
+</ul>
+<h2 id="compilation"><a href="#compilation" class="headerlink" title="compilation"></a>compilation</h2><p>webpack<a href="https://webpack.js.org/development/how-to-write-a-plugin/#compiler-and-compilation" target="_blank" rel="external">官方解释</a>如下：</p>
+<blockquote>
+<p>A compilation object represents a single build of versioned assets. While running webpack development middleware, a new compilation will be created each time a file change is detected, thus generating a new set of compiled assets. A compilation surfaces information about the present state of module resources, compiled assets, changed files, and watched dependencies. The compilation also provides many callback points at which a plugin may choose to perform custom actions.</p>
+</blockquote>
+<p><code>compilation</code> 对象代表了一次单一的版本构建和生成资源。当运行 webpack 开发环境中间件时，每当检测到一个文件变化，一次新的编译将被创建，从而生成一组新的编译资源。一个编译对象表现了当前的模块资源、编译生成资源、变化的文件、以及被跟踪依赖的状态信息。编译对象也提供了很多关键点<code>事件回调</code>供插件做自定义处理时选择使用。</p>
+<h3 id="功能核心-1"><a href="#功能核心-1" class="headerlink" title="功能核心"></a>功能核心</h3><p><code>Compilation</code>对象负责组织整个编译过程，包含了每个构建环节所对应的方法。前面提到的<code>Compiler</code>（编译器）的<code>run</code>方法中调用<code>compiler</code>方法开始编译，在编译过程中创建了一个<code>Compilation</code>对象。</p>
+<p><img src="http://7xt6po.com1.z0.glb.clouddn.com/Compilation核心.png" alt="Compilation核心"></p>
+<h3 id="Compilation事件钩子（Event-Hooks）"><a href="#Compilation事件钩子（Event-Hooks）" class="headerlink" title="Compilation事件钩子（Event Hooks）"></a>Compilation事件钩子（Event Hooks）</h3><ul>
+<li>获取Compilation对象</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">compiler.plugin(<span class="string">"compilation"</span>, <span class="function"><span class="keyword">function</span>(<span class="params">compilation</span>) </span>&#123;</div><div class="line">    <span class="comment">//主要的编译实例</span></div><div class="line">    <span class="comment">//随后所有的方法都从 compilation.plugin 上得来</span></div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<ul>
+<li>Compilation（编译）事件钩子</li>
+</ul>
+<p><img src="http://7xt6po.com1.z0.glb.clouddn.com/Compilation事件.png" alt="Compilation事件"></p>
+<ul>
+<li>Compilation绑定事件示例：</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//这里一般只有一个块，除非你在配置中指定了多个入口</span></div><div class="line">compilation.plugin(<span class="string">'optimize-chunks'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">chunks</span>) </span>&#123;</div><div class="line">    <span class="comment">//这里一般只有一个块，除非你在配置中指定了多个入口</span></div><div class="line">    chunks.forEach(<span class="function"><span class="keyword">function</span> (<span class="params">chunk</span>) </span>&#123;</div><div class="line">        <span class="comment">//块含有模块的循环引用</span></div><div class="line">        chunk.modules.forEach(<span class="function"><span class="keyword">function</span> (<span class="params">module</span>)</span>&#123;</div><div class="line">            <span class="comment">//module.loaders, module.rawRequest, module.dependencies 等。</span></div><div class="line">        &#125;);</div><div class="line">    &#125;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<h3 id="compilation源码"><a href="#compilation源码" class="headerlink" title="compilation源码"></a>compilation源码</h3><ul>
+<li><a href="https://github.com/webpack/webpack/blob/master/lib/Compilation.js" target="_blank" rel="external">点击查看</a></li>
+</ul>
+<h2 id="二者关系"><a href="#二者关系" class="headerlink" title="二者关系"></a>二者关系</h2><ul>
+<li><code>compiler</code> 对象代表的是不变的webpack环境，是针对webpack的</li>
+<li><code>compilation</code> 对象针对的是随时可变的项目文件，只要文件有改动，compilation就会被重新创建。</li>
+</ul>
+<h1 id="Module"><a href="#Module" class="headerlink" title="Module"></a>Module</h1><p>module 是 webpack 构建的核心实体，也是所有 module 的 父类，它有几种不同子类：<code>NormalModule</code> , <code>MultiModule</code> , <code>ContextModule</code> , <code>DelegatedModule</code> 等。但这些核心实体都是在构建中都会去调用对应方法，也就是<code>build()</code>。</p>
+<p>build方法核心源代码<a href="https://github.com/webpack/webpack/blob/master/lib/NormalModule.js#L259" target="_blank" rel="external">点击查看</a></p>
+<h1 id="Template"><a href="#Template" class="headerlink" title="Template"></a>Template</h1><p><code>Template</code>是用来生成结果代码的。入口是<code>compilation</code>的<code>createChunkAssets</code>方法。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//如果是入口，则使用MainTemplate生成结果，否则使用ChunkTemplate.</span></div><div class="line"><span class="keyword">if</span>(chunk.entry) &#123;</div><div class="line">   source = <span class="keyword">this</span>.mainTemplate.render(<span class="keyword">this</span>.hash, chunk, <span class="keyword">this</span>.moduleTemplate, <span class="keyword">this</span>.dependencyTemplates);</div><div class="line">&#125; <span class="keyword">else</span> &#123;</div><div class="line">   source = <span class="keyword">this</span>.chunkTemplate.render(chunk, <span class="keyword">this</span>.moduleTemplate, <span class="keyword">this</span>.dependencyTemplates);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="Template子类"><a href="#Template子类" class="headerlink" title="Template子类"></a>Template子类</h2><ul>
+<li>MainTemplate.js 用于生成项目入口文件</li>
+<li>ChunkTemplate.js 用于生成异步加载的js代码</li>
+<li>ModuleTemplate.js 用于生成某个模块的代码</li>
+<li>HotUpdateChunkTemplate.js 热更新chunk</li>
+</ul>
+<h2 id="Template源代码"><a href="#Template源代码" class="headerlink" title="Template源代码"></a>Template源代码</h2><p><a href="https://github.com/webpack/webpack/blob/master/lib/ModuleTemplate.js#L13" target="_blank" rel="external">ModuleTemplate源代码</a></p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ul>
+<li><a href="https://github.com/DDFE/DDFE-blog/issues/12" target="_blank" rel="external">命令行输入webpack的时候都发生了什么</a></li>
+<li><a href="https://segmentfault.com/a/1190000008060440" target="_blank" rel="external">Webpack 源码（一）—— Tapable 和 事件流</a></li>
+<li><a href="https://lihuanghe.github.io/2016/05/30/webpack-source-analyse.html" target="_blank" rel="external">webpack 源码解析</a></li>
+<li><a href="http://taobaofed.org/blog/2016/09/09/webpack-flow/" target="_blank" rel="external">细说 webpack 之流程篇</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/25954788" target="_blank" rel="external">从 Bundle 文件看 Webpack 模块机制</a></li>
+<li><a href="https://github.com/lcxfs1991/blog/issues/1" target="_blank" rel="external">如何写一个webpack插件（一）</a></li>
+<li><a href="https://webpack.js.org/development/how-to-write-a-plugin/" target="_blank" rel="external">How to write a plugin?</a></li>
+<li><a href="http://www.cnblogs.com/ihardcoder/p/5623411.html" target="_blank" rel="external">Webpack中hash与chunkhash的区别，以及js与css的hash指纹解耦方案</a></li>
+<li><a href="https://doc.webpack-china.org/api/plugins/" target="_blank" rel="external">插件 API</a></li>
+</ul>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/2017/04/12/webpack-ProvidePlugin/" data-toggle="tooltip" data-placement="top" title="webpack-ProvidePlugin">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/2017/03/15/js-run/" data-toggle="tooltip" data-placement="top" title="从一道前端面试题看JavaScript的核心运行机制">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#javascript" title="javascript">javascript</a>
+                        
+                          <a class="tag" href="/tags/#webpack" title="webpack">webpack</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="http://huangxuan.me" target="_blank">Hux Blog</a></li>
+                    
+                </ul>
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "fengmiaosen";
+    var disqus_identifier = "http://fengmiaosen.github.io/2017/03/21/webpack-core-code/";
+    var disqus_url = "http://fengmiaosen.github.io/2017/03/21/webpack-core-code/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+                    <li>
+                        <a target="_blank" href="https://www.zhihu.com/people/fengmiaosen">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa  fa-stack-1x fa-inverse">知</i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+                    <li>
+                        <a target="_blank" href="http://weibo.com/fms86">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-weibo fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/fengmiaosen">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; 冯淼森的博客 2017 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="/js/bootstrap.min.js"></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("http://fengmiaosen.github.io/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-76984426-1 ';
+    var _gaDomain = 'fengmiaosen';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+<script>
+    // dynamic User by Hux
+    var _baId = '4cc1f2d8f3067386cc5cdb626a202900';
+
+    // Originial
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?" + _baId;
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="http://fengmiaosen.github.io/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

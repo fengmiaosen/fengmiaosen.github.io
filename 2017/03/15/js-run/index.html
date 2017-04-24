@@ -13,11 +13,11 @@
 
     <title>
         
-          装饰模式 —— ES7之Decorator实现 - 冯淼森的博客
+          从一道前端面试题看JavaScript的核心运行机制 - 冯淼森的博客
         
     </title>
 
-    <link rel="canonical" href="http://fengmiaosen.github.io/2017/02/14/ES7-Decorator/">
+    <link rel="canonical" href="http://fengmiaosen.github.io/2017/03/15/js-run/">
 
     <!-- Bootstrap Core CSS -->
     <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -167,14 +167,12 @@
                         
                           <a class="tag" href="/tags/#javascript" title="javascript">javascript</a>
                         
-                          <a class="tag" href="/tags/#设计模式" title="设计模式">设计模式</a>
-                        
                     </div>
-                    <h1>装饰模式 —— ES7之Decorator实现</h1>
+                    <h1>从一道前端面试题看JavaScript的核心运行机制</h1>
                     <h2 class="subheading"></h2>
                     <span class="meta">
                         Posted by fengmiaosen on
-                        2017-02-14
+                        2017-03-15
                     </span>
                 </div>
             </div>
@@ -193,12 +191,15 @@
                 col-md-10 col-md-offset-1
                 post-container">
 
-                <p>参考资料：</p>
-<ul>
-<li><a href="http://www.barretlee.com/blog/2017/02/14/the-decorator-pattern-in-design-patterns/" target="_blank" rel="external">聊聊设计模式（4）：装饰模式</a></li>
-<li><a href="http://www.infoq.com/cn/articles/our-best-practices-for-writing-react-components" target="_blank" rel="external">MuseFind：编写React组件的最佳实践</a></li>
-<li><a href="https://engineering.musefind.com/our-best-practices-for-writing-react-components-dec3eb5c3fc8#.86p1ww63v" target="_blank" rel="external">Our Best Practices for Writing React Components</a></li>
-<li><a href="https://zhongsp.gitbooks.io/typescript-handbook/content/doc/handbook/Decorators.html" target="_blank" rel="external">装饰器</a></li>
+                <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">  <span class="built_in">console</span>.log(<span class="number">1</span>)</div><div class="line">&#125;, <span class="number">0</span>);</div><div class="line"><span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span> <span class="title">executor</span>(<span class="params">resolve</span>) </span>&#123;</div><div class="line">  <span class="built_in">console</span>.log(<span class="number">2</span>);</div><div class="line">  <span class="keyword">for</span>( <span class="keyword">var</span> i=<span class="number">0</span> ; i&lt;<span class="number">10000</span> ; i++ ) &#123;</div><div class="line">    i == <span class="number">9999</span> &amp;&amp; resolve();</div><div class="line">  &#125;</div><div class="line">  <span class="built_in">console</span>.log(<span class="number">3</span>);</div><div class="line">&#125;).then(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">  <span class="built_in">console</span>.log(<span class="number">4</span>);</div><div class="line">&#125;);</div><div class="line"><span class="built_in">console</span>.log(<span class="number">5</span>);</div></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="number">2</span></div><div class="line"><span class="number">3</span></div><div class="line"><span class="number">5</span></div><div class="line"><span class="number">4</span></div><div class="line"><span class="number">1</span></div></pre></td></tr></table></figure>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ul>
+<li><a href="https://zhuanlan.zhihu.com/p/25407758" target="_blank" rel="external">Excuse me？这个前端面试在搞事</a>！</li>
+<li><a href="https://juejin.im/entry/5847c101128fe10058bcef6e" target="_blank" rel="external">深入理解 JavaScript 运行机制</a></li>
+<li><a href="http://www.ruanyifeng.com/blog/2014/10/event-loop.html" target="_blank" rel="external">JavaScript 运行机制详解：再谈Event Loop</a></li>
+<li><a href="http://www.cnblogs.com/zichi/p/4604053.html" target="_blank" rel="external">从setTimeout谈JavaScript运行机制</a></li>
+<li><a href="http://coolnuanfeng.github.io/javascriptRun" target="_blank" rel="external">深入理解 Javascript 运行机制及原型</a></li>
 </ul>
 
 
@@ -209,12 +210,12 @@
                 <ul class="pager">
                     
                         <li class="previous">
-                            <a href="/2017/03/15/js-run/" data-toggle="tooltip" data-placement="top" title="从一道前端面试题看JavaScript的核心运行机制">&larr; Previous Post</a>
+                            <a href="/2017/04/12/webpack-ProvidePlugin/" data-toggle="tooltip" data-placement="top" title="webpack-ProvidePlugin">&larr; Previous Post</a>
                         </li>
                     
                     
                         <li class="next">
-                            <a href="/2017/01/13/import-dynamic-loading/" data-toggle="tooltip" data-placement="top" title="基于ECMAScript stage-3提议import()特性动态加载js模块">Next Post &rarr;</a>
+                            <a href="/2017/02/14/ES7-Decorator/" data-toggle="tooltip" data-placement="top" title="装饰模式 —— ES7之Decorator实现">Next Post &rarr;</a>
                         </li>
                     
                 </ul>
@@ -249,8 +250,6 @@
                        
                           <a class="tag" href="/tags/#javascript" title="javascript">javascript</a>
                         
-                          <a class="tag" href="/tags/#设计模式" title="设计模式">设计模式</a>
-                        
                     </div>
                 </section>
                 
@@ -279,8 +278,8 @@
 <script type="text/javascript">
     /* * * CONFIGURATION VARIABLES * * */
     var disqus_shortname = "fengmiaosen";
-    var disqus_identifier = "http://fengmiaosen.github.io/2017/02/14/ES7-Decorator/";
-    var disqus_url = "http://fengmiaosen.github.io/2017/02/14/ES7-Decorator/";
+    var disqus_identifier = "http://fengmiaosen.github.io/2017/03/15/js-run/";
+    var disqus_url = "http://fengmiaosen.github.io/2017/03/15/js-run/";
 
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

@@ -324,7 +324,7 @@
 <figure class="highlight elixir"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$ </span>cd src/myProject</div><div class="line"><span class="variable">$ </span>npm link myModule</div></pre></td></tr></table></figure>
 <p>上面命令等同于生成了本地模块的符号链接</p>
 <p>3.在js脚本中就可以通过require的方式来引用该模块了。</p>
-<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="attribute">var myModule</span> = require(<span class="string">'myModule'</span>);</div></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> myModule = <span class="built_in">require</span>(<span class="string">'myModule'</span>);</div></pre></td></tr></table></figure>
 <p>这样一来，myModule的任何变化，都可以直接反映在myProject项目之中。但是，这样也出现了风险，任何在myProject目录中对myModule的修改，都会反映到模块的源码中。</p>
 <p>4.如果你的项目不再需要该模块，可以在项目目录内使用<code>npm unlink</code>命令，删除符号链接</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">cd</span> src/myProject</div><div class="line">$ npm unlink myModule</div></pre></td></tr></table></figure>
